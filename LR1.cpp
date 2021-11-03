@@ -8,38 +8,108 @@
 #include <map>
 #include <algorithm>
 
+#define debug(x) std::cerr << #x << " = " << x << std::endl
+
 std::ifstream grammarFile;
 std::ifstream inputFile;
 std::ofstream firstSetFile;
+std::ofstream CFile;
 
-std::string S;
+std::string S; // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT; // 终结符
 std::vector<std::string> VN; // 非终结符
 std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
 std::map<std::string, std::set<int>> first; // first 集
+std::map<std::tuple<int, int, int>, int> GO; // G(I, type, idx) = j;
 
 struct Item {
     decltype(G.begin()) itrG;
     std::size_t branchId;
-    std::size_t dotPos; // . 的位置
-    std::string right;
+    std::size_t dotPos; // . 的位置, 0 到 size
+    std::size_t right; // 右侧终结符下标
 };
 std::vector<std::vector<Item>> I; // 项目集 I0, I1, I2, ...
 
 void openFile() {
     grammarFile.open("Grammar.txt");
+    CFile.open("CFile.txt");
+    firstSetFile.open("First.txt");
 }
 
 void closeFile() {
     grammarFile.close();
-    std::cout.flush();
+    CFile.close();
+    firstSetFile.close();
 }
 
-void printVN_VT() { // for debug 输出变元 终结符
+void writeFirst() { // 输出 first 集和
+    for (const auto& i : first) {
+        firstSetFile << "First(" << i.first << ") = { ";
+        for (auto it = i.second.begin(); it != i.second.end();) {
+            firstSetFile << VT[*it];
+            if ((++it) != i.second.end()) firstSetFile << " , ";
+        }
+       firstSetFile << " }\n";
+    }
+}
+
+void writeC() { // 输出文法的项目集族 C
+    for (int i = 0; i < I.size(); i++) {
+        CFile << "I" << i << ":\n";
+        for (auto& item : I[i]) {
+            CFile << "[ ";
+            auto& vec = item.itrG->second[item.branchId];
+            CFile << item.itrG->first << "->";
+            for (int j = 0; j < vec.size(); j++) {
+                if (j == item.dotPos) CFile << ".";
+                if (vec[j].first) CFile << VN[vec[j].second];
+                else CFile << VT[vec[j].second];
+            }
+            if (item.dotPos == vec.size()) CFile << ".";
+            CFile << " , " << VT[item.right];
+            CFile << " ]\n";
+        }
+        CFile << "\n";
+    }
+
+    std::cout << "Write C done!" << "\n";
+}
+
+void writeGO() {
+    for (auto& i : GO) {
+        int I, type, idx, J;
+        std::tie(I, type, idx) = i.first, J = i.second;
+        CFile << "GO(I" << I << ", ";
+        CFile << (type ? VN[idx] : VT[idx]);
+        CFile << ") = " << J << "\n";
+    }
+
+    std::cout << "Write GO done!" << "\n";
+}
+
+void printItem(const Item& item) { // for debug 输出项目
+    std::cout << "Debug item: ";
+    auto& vec = item.itrG->second[item.branchId];
+    std::cout << item.itrG->first << "->";
+    for (int j = 0; j < vec.size(); j++) {
+        if (j == item.dotPos) std::cout << ".";
+        if (vec[j].first) // is VN
+            std::cout << VN[vec[j].second];
+        else // is VT
+            std::cout << VT[vec[j].second];
+    }
+    if (item.dotPos == vec.size()) std::cout << ".";
+    std::cout << "\n";
+}
+
+void printVN_VT_S() { // for debug 输出变元 终结符
+    std::cout << "VT: ";
     for (auto& i : VT) std::cout << i << " ";
     std::cout << "\n";
+    std::cout << "VN: ";
     for (auto& i : VN) std::cout << i << " ";
     std::cout << "\n";
+    std::cout << "S: " << S << "\n";
 }
 
 void printG() { // for debug 输出所有产生式
@@ -62,23 +132,16 @@ void printG() { // for debug 输出所有产生式
     */
 }
 
-void printFirst() { // 输出 first 集和
-    for (const auto& i : first) {
-        std::cout << "First(" << i.first << ") = { ";
-        for (auto it = i.second.begin(); it != i.second.end();) {
-            std::cout << VT[*it];
-            if ((++it) != i.second.end()) std::cout << " , ";
-        }
-        std::cout << " }\n";
-    }
-}
-
-void inputGrammar() { // 输入文法
+// 输入文法
+void inputGrammar() {
     std::stringstream ss;
     std::string line, vt, vn;
     getline(grammarFile, line); // 读入终结符
     ss.clear(), ss << line;
     while (getline(ss, vt, ' ')) if (vt.size()) VT.push_back(vt);
+    
+    sort(VT.begin(), VT.end()); // 按字典序 可以删除
+
     VT.push_back("#"); // # 也做为终结符
     VT.push_back("@"); // epsilon 这里额外将 epsilon 也算作终结符
 
@@ -86,7 +149,14 @@ void inputGrammar() { // 输入文法
     ss.clear(), ss << line;
     while (getline(ss, vn, ' ')) if (vn.size()) VN.push_back(vn);
 
-    printVN_VT(); // for debug
+    sort(VN.begin(), VN.end()); // 按字典序 可删除
+
+    // 读入文法起始符号
+    getline(grammarFile, line);
+    ss.clear(), ss << line;
+    getline(ss, S, ' ');
+
+    printVN_VT_S(); // for debug
 
     while (getline(grammarFile, line)) { // 读入产生式
         ss.clear(), ss << line; // 读入文法 
@@ -136,7 +206,8 @@ void inputGrammar() { // 输入文法
     ss.clear();
 }
 
-void getFirstSet() { // 求 first 集
+// 求 first 集
+void getFirstSet() {
     bool end = false;
     for (int i = 0; i < VT.size(); i++) if (VT[i] != "@") first[VT[i]].insert(i);
     while (!end) {
@@ -186,30 +257,152 @@ void getFirstSet() { // 求 first 集
     }
 }
 
-int getFirst(const std::pair<bool, int>& l, const std::pair<bool, int>& r) { // 获得 first(βa);
-
+// 判断是否找到一个项目
+bool foundItem(const std::vector<Item>& I, const Item& item) {
+    for (auto& i : I) {
+        if (i.itrG == item.itrG && i.branchId == item.branchId &&
+            i.dotPos == item.dotPos && i.right == item.right)
+            return true;
+    }
+    return false;
 }
 
-void genClosure() {
-
+// 获得 first(βa) 的终结符;
+std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
+                         std::size_t right, std::size_t dotPos) {
+    std::set<int> ret;
+    int epsPos = dotPos;
+    for (int i = dotPos + 1; i < l.size(); i++) { // 找到连续的含有 eps 的 V
+        bool type= l[i].first;
+        int idx = l[i].second;
+        if (type && first[VN[idx]].count(VT.size() - 1)) epsPos = i;
+        else break; // VT[VT.size() - 1] is @ --- eps
+    }
+    for (int i = dotPos + 1; i <= epsPos; i++) {
+        for (auto& j : first[VN[l[i].second]])
+            if (j + 1 != VT.size())  // First[Yi] - {eps}
+                ret.insert(j);
+    }
+    if (epsPos + 1 == l.size()) {
+        ret.insert(right);  // add {a}
+    } else {
+        if (l[epsPos + 1].first == true) {  // VN
+            for (auto& j : first[VN[l[epsPos + 1].second]])
+                ret.insert(j);
+        } else {  // VT
+            for (auto& j : first[VT[l[epsPos + 1].second]])
+                ret.insert(j);
+        }
+    }
+    return ret;
 }
 
-void findI() {
+// 生成项目集 Ii 的闭包
+void genClosure(std::vector<Item>& Ii) {
+    for (int i = 0; i < Ii.size(); i++) {
+        const auto& item = Ii[i];
+        const auto& vec = item.itrG->second[item.branchId];
+        if (item.dotPos == vec.size()) continue;  // 规约状态
+        bool type = vec[item.dotPos].first;
+        int idx = vec[item.dotPos].second;
+        if (type == false) continue;  // VT 终结符跳过
 
+        for (auto& iVT : getFirstVT(vec, item.right, item.dotPos)) {  // 对于每个 First(βa) 中的终结符
+            Item newItem;
+            auto itr = G.find(VN[idx]); // 获取 .Bβ 的 B -> 产生式迭代器
+            
+            if (itr == G.end()) {
+                std::cerr << "GenClosure error! line: " << __LINE__
+                          << std::endl;
+                return;
+            }
+            for (int j = 0; j < itr->second.size(); j++) {
+                newItem.itrG = itr, newItem.branchId = j;
+                newItem.right = iVT, newItem.dotPos = 0;
+                if (!foundItem(Ii, newItem)) Ii.push_back(newItem);
+            }
+        }
+    }
 }
 
-void genGO() {
-
+// 判断项目集 Itmp 是否存在，返回项目集编号 brute force
+int foundI(const std::vector<Item>& Itmp) { 
+    for (int i = 0; i < I.size(); i++) {
+        if (I[i].size() == Itmp.size()) { // 项目集大小相同才有可能相等
+            bool same = true;
+            for (auto& itemOfItmp : Itmp) { // 每一个项目
+                bool foundItem = false; // 都应在 I[i] 中能找到
+                for (auto& itemOfIi : I[i]) {
+                    if (itemOfIi.itrG == itemOfItmp.itrG && itemOfIi.branchId == itemOfItmp.branchId
+                    && itemOfIi.dotPos == itemOfItmp.dotPos && itemOfIi.right == itemOfItmp.right) {
+                        foundItem = true;
+                        break;
+                    }
+                }
+                if (!foundItem) same = false;
+            }
+            if (same) return i;
+        }
+    }
+    return -1;
 }
 
-void genC() { // 生成 LR(1) 项目集族 C
+// 生成 LR(1) 项目集族 C
+void genC() {
     // 初始化 I0: [S'->.S, #]
+    std::vector<Item> I0;
+    I0.push_back((Item) {G.find(S), 0, 0, VT.size() - 2}); // VT[VT.size() - 2] is #
+    genClosure(I0);
+    I.push_back(I0);
 
-    int curId = 0;
-    bool end = false;
-    while (!end) {
-        end = true;
-        
+    for (int i = 0; i < I.size(); i++) { // 对于每个项目 Ii
+        for (int idx = 0; idx < VN.size(); idx++) { // 对于每个非终结符
+            std::vector<Item> newI; // 新的项目集 vector
+            for (const auto& item : I[i]) {
+                const auto& vec = item.itrG->second[item.branchId];
+                if (item.dotPos == vec.size()) continue;  // 规约状态
+                auto nxtItem = item;
+                nxtItem.dotPos++;  // . 右移一位
+
+                bool Xtype = vec[item.dotPos].first;  // X of GO(I, X)
+                int Xidx = vec[item.dotPos].second;
+                // Xtype = 0 表示终结符 1 表示变元
+                if (Xtype == 1 && idx == Xidx) newI.push_back(nxtItem);  // 加入.右移一位的项目
+            }
+            if (newI.empty()) continue;
+            genClosure(newI);  // 生成 closure
+
+            int to = foundI(newI);  // 计算 GO(I, X)
+            if (to == -1) {        // 新的项目集
+                to = I.size();
+                I.push_back(newI);
+            }
+            GO[{i, 1, idx}] = to;  // GO(I, X) = j; X in VT
+        }
+
+        for (int idx = 0; idx < VT.size() - 2; idx++) { // 对于每个终结符 @ # 除外
+            std::vector<Item> newI; // 新的项目集 vector
+            for (const auto& item : I[i]) {
+                const auto& vec = item.itrG->second[item.branchId];
+                if (item.dotPos == vec.size()) continue;  // 规约状态
+                auto nxtItem = item;
+                nxtItem.dotPos++;  // . 右移一位
+
+                bool Xtype = vec[item.dotPos].first;  // X of GO(I, X)
+                int Xidx = vec[item.dotPos].second;
+                // Xtype = 0 表示终结符 1 表示变元
+                if (Xtype == 0 && idx == Xidx) newI.push_back(nxtItem);  // 加入.右移一位的项目
+            }
+            if (newI.empty()) continue;
+            genClosure(newI);  // 生成 closure
+
+            int to = foundI(newI);  // 计算 GO(I, X)
+            if (to == -1) {        // 新的项目集
+                to = I.size();
+                I.push_back(newI);
+            }
+            GO[{i, 0, idx}] = to;  // GO(I, X) = j; X in VT
+        }
     }
 }
 
@@ -218,9 +411,11 @@ void LR1() { // LR1分析法 入口
     printG();
 
     getFirstSet(); // 生成 first 集和
-    printFirst();
+    writeFirst();
 
     genC(); // 生成 LR(1) 项目集族 C
+    writeC();
+    writeGO();
 }
 
 int main() {
