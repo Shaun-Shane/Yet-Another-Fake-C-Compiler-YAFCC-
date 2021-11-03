@@ -18,9 +18,10 @@ std::ofstream CFile;
 std::string S; // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT; // 终结符
 std::vector<std::string> VN; // 非终结符
+std::map<std::string, int> P; // key 产生式 value 第 i 个产生式
 std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
 std::map<std::string, std::set<int>> first; // first 集
-std::map<std::tuple<int, int, int>, int> GO; // G(I, type, idx) = j;
+std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
 
 struct Item {
     decltype(G.begin()) itrG;
@@ -132,6 +133,17 @@ void printG() { // for debug 输出所有产生式
     */
 }
 
+// 返回产生式对应字符串
+std::string P_ToString(const std::string& gl, const std::vector<std::pair<bool, int>>& vec) {
+    std::string ret;
+    ret += gl + "->";
+    for (auto& i : vec) {
+        if (i.first) ret += VN[i.second]; // VN
+        else ret += VT[i.second];// VT
+    }
+    return ret;
+}
+
 // 输入文法
 void inputGrammar() {
     std::stringstream ss;
@@ -158,6 +170,7 @@ void inputGrammar() {
 
     printVN_VT_S(); // for debug
 
+    int cntP(0); // 产生式个数
     while (getline(grammarFile, line)) { // 读入产生式
         ss.clear(), ss << line; // 读入文法 
         std::string gl, gr; char ch;
@@ -201,6 +214,14 @@ void inputGrammar() {
                 }
             }
         }
+        std::string stmp = P_ToString(gl, vec);
+        if (P.count(stmp)) { // 判断是否重复输入产生式
+            std::cerr << "Multiple P input!: " << line << std::endl;
+            closeFile();
+            exit(0);
+        }
+        cntP++; // 产生式个数 + 1
+        P[stmp] = cntP;
         G[gl].push_back(vec); // push_back 完整的右部信息
     }
     ss.clear();
@@ -404,6 +425,38 @@ void genC() {
             GO[{i, 0, idx}] = to;  // GO(I, X) = j; X in VT
         }
     }
+}
+
+// pp's work
+void writeLR1Table() {
+
+}
+// pp's work
+void genLR1Table() {
+    /* LR1 表的构造步骤 1 PPT118:
+     * 已给出全局 std::map<std::tuple<int, int, int>, int> GO;
+     * GO(I, type, idx) = j, 表示从项目集 I 出发，遇到字符 type, idx，到达 j
+     * type = 0 表示终结符，idx 表示终结符在 VT 的下标
+     * type = 1 表示变元符，idx 表示终结符在 VN 的下标
+     * make_tuple(I, type, idx) 可获得对应 tuple，或直接 {I, type, idx}
+     * tie(I, type, idx) = tuple 可获得 I, type, idx
+     * 
+    */
+
+   /* LR1 表的构造步骤 2 PPT118:
+     * 下标遍历 std::vector<std::vector<Item>> I 可获得 I[k]
+     * 遍历 I[k] 可获得每个项目 [ A->..., vt ]
+     * 通过 P_ToString(item.itrG->first, item.itrG->second[item.branchId]) 获取产生式字符串
+     * 通过字符串在 map P 中查询出这是第几个产生式
+    */
+
+   /* LR1 表的构造步骤 3 PPT118:
+     * 和步骤 1 类似，但只需枚举 I 下标，以及变元 VN[0...VN.size())
+    */
+
+   /*
+    * 最后将 table 输出到 CFile 中，CFile 是 ofstream，参见 write CFile
+   */
 }
 
 void LR1() { // LR1分析法 入口
