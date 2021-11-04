@@ -28,7 +28,14 @@ std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
 std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
 //fir == -1:err   0:acc   1:sj   2:rj
 std::vector<std::map<std::string, int>> GOTO;
-std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;//最后一个元素为root
+std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;
+/*
+最后一个元素为root
+每一个元素为非叶子节点向儿子的连边，从右往左
+每一条连边的值是一个pair，是儿子的编号以及儿子的字符
+编号为-1代表是一个叶子节点
+起始符号没有保存下来，所以画树的时候同样需要起始符号S的值
+*/
 
 struct Item {
     decltype(G.begin()) itrG;
