@@ -81,3 +81,18 @@ I6: A->err  B->9  S->err  S'->err
 I7: A->err  B->err  S->err  S'->err  
 I8: A->err  B->err  S->err  S'->err  
 I9: A->err  B->err  S->err  S'->err  
+
+status    sign      input
+0         #         aabab#
+03        #a        abab#
+033       #aa       bab#
+0334      #aab      ab#
+0338      #aaB      ab#
+038       #aB       ab#
+01        #B        ab#
+016       #Ba       b#
+0167      #Bab      #
+0169      #BaB      #
+015       #BB       #
+02        #S        #
+acc

@@ -4,9 +4,11 @@
 #include <vector>
 #include <sstream>
 #include <utility>
+#include <stack>
 #include <set>
 #include <map>
 #include <algorithm>
+#include <iomanip>
 
 #define debug(x) std::cerr << #x << " = " << x << std::endl
 
@@ -19,6 +21,7 @@ std::string S; // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT; // 终结符
 std::vector<std::string> VN; // 非终结符
 std::map<std::string, int> P; // key 产生式 value 第 i 个产生式
+std::vector<std::pair<std::string, int>> PtoG;
 std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
 std::map<std::string, std::set<int>> first; // first 集
 std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
@@ -38,12 +41,14 @@ void openFile() {
     grammarFile.open("Grammar.txt");
     CFile.open("CFile.txt");
     firstSetFile.open("First.txt");
+    inputFile.open("Input.txt");
 }
 
 void closeFile() {
     grammarFile.close();
     CFile.close();
     firstSetFile.close();
+    inputFile.close();
 }
 
 void writeFirst() { // 输出 first 集和
@@ -226,6 +231,9 @@ void inputGrammar() {
         cntP++; // 产生式个数 + 1
         P[stmp] = cntP;
         G[gl].push_back(vec); // push_back 完整的右部信息
+        std::pair<std::string, int> tmp_pr;
+        tmp_pr.first = gl; tmp_pr.second = G[gl].size() - 1;
+        PtoG.push_back(tmp_pr);
     }
     ss.clear();
 }
@@ -550,9 +558,87 @@ void LR1() { // LR1分析法 入口
     writeLR1Table();
 }
 
+void checkStr()
+{
+    std::string str;
+    inputFile >> str;
+    str += '#';
+    
+    std::vector <int> status;
+    std::vector <std::string> sign;
+    status.push_back(0);
+    sign.push_back("#");
+
+    bool end = false; // sign of end
+    bool err = false; // sign of err
+    int p = 0;
+    CFile << "\n";
+
+    CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
+    CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
+    CFile << "input" << "\n";
+    while(!end)
+    {
+        std::string output;
+        for(auto itr: status)
+            output += std::to_string(itr);
+        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+        output.clear();
+        
+        for(auto itr: sign)
+            output += itr;
+        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+
+        for(int i = p; i < str.length(); i ++)
+            CFile << str[i];
+        CFile << "\n";
+
+        int now = status.back();
+        std::pair <int, int> act;
+        std::string ch;
+        ch += str[p];
+        act = ACTION[now][ch];
+
+        if(act.first == -1)
+        {
+            end = true;
+            err = true;
+        }
+        else if(act.first == 0)
+            end = true;
+        else if(act.first == 1)
+        {
+            status.push_back(act.second);
+            sign.push_back(ch);
+            ++ p;
+        }
+        else
+        {
+            int Pnum = act.second;
+            std::vector<std::pair<bool, int>> vec;
+            vec = G[PtoG[Pnum].first][PtoG[Pnum].second];
+
+            int sz = vec.size();
+            for(int i = 0; i < sz; i ++)
+            {
+                status.pop_back();
+                sign.pop_back();
+            }
+            sign.push_back(PtoG[Pnum].first);
+            status.push_back(GOTO[status.back()][PtoG[Pnum].first]);
+        }
+    }
+    if(!err)
+        CFile << "acc\n";
+    else
+        CFile << "err\n";
+
+}
+
 int main() {
     openFile();
     LR1();
+    checkStr();
     closeFile();
     return 0;
 }
