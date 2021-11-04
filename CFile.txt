@@ -2,8 +2,8 @@ I0:
 [ S'->.S , # ]
 [ S->.BB , # ]
 [ B->.aB , a ]
-[ B->.b , a ]
 [ B->.aB , b ]
+[ B->.b , a ]
 [ B->.b , b ]
 
 I1:
@@ -15,11 +15,11 @@ I2:
 [ S'->S. , # ]
 
 I3:
+[ B->.aB , a ]
+[ B->.aB , b ]
 [ B->a.B , a ]
 [ B->a.B , b ]
-[ B->.aB , a ]
 [ B->.b , a ]
-[ B->.aB , b ]
 [ B->.b , b ]
 
 I4:
@@ -30,8 +30,8 @@ I5:
 [ S->BB. , # ]
 
 I6:
-[ B->a.B , # ]
 [ B->.aB , # ]
+[ B->a.B , # ]
 [ B->.b , # ]
 
 I7:
@@ -57,49 +57,3 @@ GO(I3, B) = 8
 GO(I6, a) = 6
 GO(I6, b) = 7
 GO(I6, B) = 9
-
-LR(1) Table:
-ACTION:
-I0: a->s3  b->s4  #->err  @->err  
-I1: a->s6  b->s7  #->err  @->err  
-I2: a->err  b->err  #->acc  @->err  
-I3: a->s3  b->s4  #->err  @->err  
-I4: a->r3  b->r3  #->err  @->err  
-I5: a->err  b->err  #->r1  @->err  
-I6: a->s6  b->s7  #->err  @->err  
-I7: a->err  b->err  #->r3  @->err  
-I8: a->r2  b->r2  #->err  @->err  
-I9: a->err  b->err  #->r2  @->err  
-GOTO:
-I0: A->err  B->1  S->2  S'->err  
-I1: A->err  B->5  S->err  S'->err  
-I2: A->err  B->err  S->err  S'->err  
-I3: A->err  B->8  S->err  S'->err  
-I4: A->err  B->err  S->err  S'->err  
-I5: A->err  B->err  S->err  S'->err  
-I6: A->err  B->9  S->err  S'->err  
-I7: A->err  B->err  S->err  S'->err  
-I8: A->err  B->err  S->err  S'->err  
-I9: A->err  B->err  S->err  S'->err  
-
-status    sign      input
-0         #         aabab#
-03        #a        abab#
-033       #aa       bab#
-0334      #aab      ab#
-0338      #aaB      ab#
-038       #aB       ab#
-01        #B        ab#
-016       #Ba       b#
-0167      #Bab      #
-0169      #BaB      #
-015       #BB       #
-02        #S        #
-acc
-
--1 b   
-0 B   -1 a   
-1 B   -1 a   
--1 b   
-3 B   -1 a   
-4 B   2 B   

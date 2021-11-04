@@ -20,11 +20,16 @@ std::ofstream CFile;
 std::string S; // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT; // 终结符
 std::vector<std::string> VN; // 非终结符
-std::map<std::string, int> P; // key 产生式 value 第 i 个产生式
-std::vector<std::pair<std::string, int>> PtoG;
-std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
+
+// std::map<std::string, int> P; // key 产生式 value 第 i 个产生式
+std::vector<std::pair<std::string, std::vector<std::pair<bool, int>>>> P; // S -> X1X2X3...
+// std::vector<std::pair<std::string, int>> PtoG;
+// std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
+std::map<std::string, std::vector<std::size_t>> G; // 产生式 如 Si->branch1 | branch2 ...
+
 std::map<std::string, std::set<int>> first; // first 集
 std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
+
 std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
 //fir == -1:err   0:acc   1:sj   2:rj
 std::vector<std::map<std::string, int>> GOTO;
@@ -38,12 +43,19 @@ std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;
 */
 
 struct Item {
-    decltype(G.begin()) itrG;
-    std::size_t branchId;
+    // decltype(G.begin()) itrG;
+    std::size_t pId; // 属于哪一条产生式
     std::size_t dotPos; // . 的位置, 0 到 size
     std::size_t right; // 右侧终结符下标
+    bool operator<(const Item& other) const {
+        if (pId == other.pId) {
+            if (dotPos == other.dotPos) return right < other.right;
+            return dotPos < other.dotPos;
+        }
+        return pId < other.pId;
+    }
 };
-std::vector<std::vector<Item>> I; // 项目集 I0, I1, I2, ...
+std::vector<std::set<Item>> I; // 项目集 I0, I1, I2, ...
 
 void openFile() {
     grammarFile.open("Grammar.txt");
@@ -75,8 +87,8 @@ void writeC() { // 输出文法的项目集族 C
         CFile << "I" << i << ":\n";
         for (auto& item : I[i]) {
             CFile << "[ ";
-            auto& vec = item.itrG->second[item.branchId];
-            CFile << item.itrG->first << "->";
+            const auto& vec = P[item.pId].second;
+            CFile << P[item.pId].first << "->";
             for (int j = 0; j < vec.size(); j++) {
                 if (j == item.dotPos) CFile << ".";
                 if (vec[j].first) CFile << VN[vec[j].second];
@@ -106,8 +118,8 @@ void writeGO() {
 
 void printItem(const Item& item) { // for debug 输出项目
     std::cout << "Debug item: ";
-    auto& vec = item.itrG->second[item.branchId];
-    std::cout << item.itrG->first << "->";
+    const auto& vec = P[item.pId].second;
+    std::cout << P[item.pId].first << "->";
     for (int j = 0; j < vec.size(); j++) {
         if (j == item.dotPos) std::cout << ".";
         if (vec[j].first) // is VN
@@ -134,7 +146,7 @@ void printG() { // for debug 输出所有产生式
         std::cout << i.first << "->";
         const auto& tmp = i.second;
         for (int i = 0; i < tmp.size(); i++) {
-            for (const auto& j : tmp[i]) {
+            for (const auto& j : P[tmp[i]].second) {
                 // std::cout << j.first << " " << j.second << std::endl;
                 if (j.first) std::cout << VN[j.second];
                 else std::cout << VT[j.second];
@@ -231,17 +243,26 @@ void inputGrammar() {
             }
         }
         std::string stmp = P_ToString(gl, vec);
-        if (P.count(stmp)) { // 判断是否重复输入产生式
-            std::cerr << "Multiple P input!: " << line << std::endl;
+        std::cout << stmp << std::endl;
+        for (auto& i : P) { // 判断有无重复产生式
+            if (stmp == P_ToString(i.first, i.second)) {
+                std::cerr << "Multiple P input!: " << line << std::endl;
+                closeFile();
+                exit(0);
+            }
+        }
+        if (!G[S].empty() && gl == S) { // 判断拓展文法开始符号是否有多个产生式
+            std::cerr << "S has more than 1 Production!: " << line << std::endl;
             closeFile();
             exit(0);
         }
-        cntP++; // 产生式个数 + 1
-        P[stmp] = cntP;
-        G[gl].push_back(vec); // push_back 完整的右部信息
-        std::pair<std::string, int> tmp_pr;
-        tmp_pr.first = gl; tmp_pr.second = G[gl].size() - 1;
-        PtoG.push_back(tmp_pr);
+        P.emplace_back(gl, vec); // 存储一条产生式，产生式数目 + 1
+        G[gl].push_back(P.size() - 1);
+        // P[stmp] = cntP;
+        // G[gl].push_back(vec); // push_back 完整的右部信息
+        // std::pair<std::string, int> tmp_pr;
+        // tmp_pr.first = gl; tmp_pr.second = G[gl].size() - 1;
+        // PtoG.push_back(tmp_pr);
     }
     ss.clear();
 }
@@ -254,7 +275,8 @@ void getFirstSet() {
         end = true;
         for (const auto& g : G) {
             auto gl = g.first; // gl -> branch1 | branch2 and gl is in VN
-            for (const auto& branch : g.second) {
+            for (const auto& p : g.second) {
+                const auto& branch = P[p].second;
                 bool type = branch.front().first;
                 int idx = branch.front().second;
 
@@ -297,16 +319,6 @@ void getFirstSet() {
     }
 }
 
-// 判断是否找到一个项目
-bool foundItem(const std::vector<Item>& I, const Item& item) {
-    for (auto& i : I) {
-        if (i.itrG == item.itrG && i.branchId == item.branchId &&
-            i.dotPos == item.dotPos && i.right == item.right)
-            return true;
-    }
-    return false;
-}
-
 // 获得 first(βa) 的终结符;
 std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
                          std::size_t right, std::size_t dotPos) {
@@ -338,10 +350,10 @@ std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
 }
 
 // 生成项目集 Ii 的闭包
-void genClosure(std::vector<Item>& Ii) {
-    for (int i = 0; i < Ii.size(); i++) {
-        const auto& item = Ii[i];
-        const auto& vec = item.itrG->second[item.branchId];
+void genClosure(std::set<Item>& Ii) {
+    for (auto itr = Ii.begin(); itr != Ii.end(); ++itr) {
+        const auto& item = *itr;
+        const auto& vec = P[item.pId].second;
         if (item.dotPos == vec.size()) continue;  // 规约状态
         bool type = vec[item.dotPos].first;
         int idx = vec[item.dotPos].second;
@@ -356,30 +368,28 @@ void genClosure(std::vector<Item>& Ii) {
                           << std::endl;
                 return;
             }
-            for (int j = 0; j < itr->second.size(); j++) {
-                newItem.itrG = itr, newItem.branchId = j;
-                newItem.right = iVT, newItem.dotPos = 0;
-                if (!foundItem(Ii, newItem)) Ii.push_back(newItem);
+            for (auto& nxtPId : itr->second) {
+                newItem.pId = nxtPId, newItem.right = iVT, newItem.dotPos = 0;
+                Ii.insert(newItem);
             }
         }
     }
 }
 
 // 判断项目集 Itmp 是否存在，返回项目集编号 brute force
-int foundI(const std::vector<Item>& Itmp) { 
+int foundI(const std::set<Item>& Itmp) { 
     for (int i = 0; i < I.size(); i++) {
         if (I[i].size() == Itmp.size()) { // 项目集大小相同才有可能相等
             bool same = true;
-            for (auto& itemOfItmp : Itmp) { // 每一个项目
-                bool foundItem = false; // 都应在 I[i] 中能找到
-                for (auto& itemOfIi : I[i]) {
-                    if (itemOfIi.itrG == itemOfItmp.itrG && itemOfIi.branchId == itemOfItmp.branchId
-                    && itemOfIi.dotPos == itemOfItmp.dotPos && itemOfIi.right == itemOfItmp.right) {
-                        foundItem = true;
-                        break;
-                    }
+            // set 已排序好 只需按迭代器访问判断是否有不同
+            for (auto itr1 = I[i].begin(), itr2 = Itmp.begin(); itr1 != I[i].end(); ++itr1, ++itr2) {
+                auto& itemOfIi = *itr1, &itemOfItmp = *itr2;
+                if (!(itemOfIi.pId == itemOfItmp.pId &&
+                      itemOfIi.dotPos == itemOfItmp.dotPos &&
+                      itemOfIi.right == itemOfItmp.right)) {
+                    same = false;
+                    break;
                 }
-                if (!foundItem) same = false;
             }
             if (same) return i;
         }
@@ -390,16 +400,16 @@ int foundI(const std::vector<Item>& Itmp) {
 // 生成 LR(1) 项目集族 C
 void genC() {
     // 初始化 I0: [S'->.S, #]
-    std::vector<Item> I0;
-    I0.push_back((Item) {G.find(S), 0, 0, VT.size() - 2}); // VT[VT.size() - 2] is #
+    std::set<Item> I0;
+    I0.insert((Item) {G[S][0], (std::size_t)0, VT.size() - 2}); // VT[VT.size() - 2] is #
     genClosure(I0);
     I.push_back(I0);
 
     for (int i = 0; i < I.size(); i++) { // 对于每个项目 Ii
         for (int idx = 0; idx < VN.size(); idx++) { // 对于每个非终结符
-            std::vector<Item> newI; // 新的项目集 vector
+            std::set<Item> newI; // 新的项目集 vector
             for (const auto& item : I[i]) {
-                const auto& vec = item.itrG->second[item.branchId];
+                const auto& vec = P[item.pId].second;
                 if (item.dotPos == vec.size()) continue;  // 规约状态
                 auto nxtItem = item;
                 nxtItem.dotPos++;  // . 右移一位
@@ -407,7 +417,7 @@ void genC() {
                 bool Xtype = vec[item.dotPos].first;  // X of GO(I, X)
                 int Xidx = vec[item.dotPos].second;
                 // Xtype = 0 表示终结符 1 表示变元
-                if (Xtype == 1 && idx == Xidx) newI.push_back(nxtItem);  // 加入.右移一位的项目
+                if (Xtype == 1 && idx == Xidx) newI.insert(nxtItem);  // 加入.右移一位的项目
             }
             if (newI.empty()) continue;
             genClosure(newI);  // 生成 closure
@@ -421,9 +431,9 @@ void genC() {
         }
 
         for (int idx = 0; idx < VT.size() - 2; idx++) { // 对于每个终结符 @ # 除外
-            std::vector<Item> newI; // 新的项目集 vector
+            std::set<Item> newI; // 新的项目集 vector
             for (const auto& item : I[i]) {
-                const auto& vec = item.itrG->second[item.branchId];
+                const auto& vec = P[item.pId].second;
                 if (item.dotPos == vec.size()) continue;  // 规约状态
                 auto nxtItem = item;
                 nxtItem.dotPos++;  // . 右移一位
@@ -431,7 +441,7 @@ void genC() {
                 bool Xtype = vec[item.dotPos].first;  // X of GO(I, X)
                 int Xidx = vec[item.dotPos].second;
                 // Xtype = 0 表示终结符 1 表示变元
-                if (Xtype == 0 && idx == Xidx) newI.push_back(nxtItem);  // 加入.右移一位的项目
+                if (Xtype == 0 && idx == Xidx) newI.insert(nxtItem);  // 加入.右移一位的项目
             }
             if (newI.empty()) continue;
             genClosure(newI);  // 生成 closure
@@ -447,7 +457,7 @@ void genC() {
 }
 
 // pp's work
-void writeLR1Table() {
+/*void writeLR1Table() {
     CFile << "\nLR(1) Table:\n";
     int sz = I.size();
     CFile << "ACTION:\n";
@@ -505,7 +515,7 @@ void genLR1Table() {
 
         for(auto &item: I[i])
         {
-            auto &vec = item.itrG->second[item.branchId];
+            auto &vec = item.itrG->second[item.pId];
             int pos = item.dotPos;
             //condition 1
             if(pos < vec.size() && !vec[pos].first)
@@ -522,16 +532,6 @@ void genLR1Table() {
                 
                 std::string stmp = P_ToString(item.itrG->first, vec);
                 ACTION[i][tmp_str].second = P[stmp] - 1;
-                /*
-                if (P.count(stmp)) { // 判断是否重复输入产生式
-                    std::cerr << "Multiple P input!: " << line << std::endl;
-                    closeFile();
-                    exit(0);
-                }
-                cntP++; // 产生式个数 + 1
-                P[stmp] = cntP;
-                G[gl].push_back(vec); // push_back 完整的右部信息
-                */
             }
             //condition 3
             else if(pos == vec.size() && item.itrG->first == S)
@@ -549,7 +549,7 @@ void genLR1Table() {
         if(!type) continue;
         GOTO[I][VN[idx]] = J;
     }
-}
+}*/
 
 void LR1() { // LR1分析法 入口
     inputGrammar(); // 输入文法
@@ -558,12 +558,14 @@ void LR1() { // LR1分析法 入口
     getFirstSet(); // 生成 first 集和
     writeFirst();
 
+    std::cerr << __LINE__ << std::endl;
     genC(); // 生成 LR(1) 项目集族 C
+    std::cerr << __LINE__ << std::endl;
 
-    genLR1Table();//生成LR(1)分析表
+    // genLR1Table();//生成LR(1)分析表
     writeC();
     writeGO();
-    writeLR1Table();
+    //writeLR1Table();
 }
 
 void printGrammerTree()
@@ -578,93 +580,93 @@ void printGrammerTree()
     }
 }
 
-void checkStr()
-{
-    std::string str;
-    inputFile >> str;
-    str += '#';
+// void checkStr()
+// {
+//     std::string str;
+//     inputFile >> str;
+//     str += '#';
     
-    std::vector <int> status;
-    std::vector <std::pair<int, std::string>> sign;
-    status.push_back(0);
-    sign.push_back({-1, "#"});
+//     std::vector <int> status;
+//     std::vector <std::pair<int, std::string>> sign;
+//     status.push_back(0);
+//     sign.push_back({-1, "#"});
 
-    bool end = false; // sign of end
-    bool err = false; // sign of err
-    int p = 0;
-    CFile << "\n";
+//     bool end = false; // sign of end
+//     bool err = false; // sign of err
+//     int p = 0;
+//     CFile << "\n";
 
-    CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
-    CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
-    CFile << "input" << "\n";
-    while(!end)
-    {
-        std::string output;
-        for(auto itr: status)
-            output += std::to_string(itr);
-        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
-        output.clear();
+//     CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
+//     CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
+//     CFile << "input" << "\n";
+//     while(!end)
+//     {
+//         std::string output;
+//         for(auto itr: status)
+//             output += std::to_string(itr);
+//         CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+//         output.clear();
         
-        for(auto itr: sign)
-            output += itr.second;
-        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+//         for(auto itr: sign)
+//             output += itr.second;
+//         CFile << setiosflags(std::ios::left) << std::setw(10) << output;
 
-        for(int i = p; i < str.length(); i ++)
-            CFile << str[i];
-        CFile << "\n";
+//         for(int i = p; i < str.length(); i ++)
+//             CFile << str[i];
+//         CFile << "\n";
 
-        int now = status.back();
-        std::pair <int, int> act;
-        std::string ch;
-        ch += str[p];
-        act = ACTION[now][ch];
+//         int now = status.back();
+//         std::pair <int, int> act;
+//         std::string ch;
+//         ch += str[p];
+//         act = ACTION[now][ch];
 
-        if(act.first == -1)
-        {
-            end = true;
-            err = true;
-        }
-        else if(act.first == 0)
-            end = true;
-        else if(act.first == 1)
-        {
-            status.push_back(act.second);
-            sign.push_back({-1, ch});
-            ++ p;
-        }
-        else
-        {
-            int Pnum = act.second;
-            std::vector<std::pair<bool, int>> vec;
-            vec = G[PtoG[Pnum].first][PtoG[Pnum].second];
+//         if(act.first == -1)
+//         {
+//             end = true;
+//             err = true;
+//         }
+//         else if(act.first == 0)
+//             end = true;
+//         else if(act.first == 1)
+//         {
+//             status.push_back(act.second);
+//             sign.push_back({-1, ch});
+//             ++ p;
+//         }
+//         else
+//         {
+//             int Pnum = act.second;
+//             std::vector<std::pair<bool, int>> vec;
+//             vec = G[PtoG[Pnum].first][PtoG[Pnum].second];
 
-            int sz = vec.size();
-            std::vector <std::pair<int, std::string>> son;
-            for(int i = 0; i < sz; i ++)
-            {
-                status.pop_back();
-                son.push_back(sign.back());
-                sign.pop_back();
-            }
-            GrammerTree.push_back(son);
-            sign.push_back({GrammerTree.size() - 1, PtoG[Pnum].first});
-            status.push_back(GOTO[status.back()][PtoG[Pnum].first]);
-        }
-    }
-    if(!err)
-    {
-        CFile << "acc\n";
-        printGrammerTree();
-    }
-    else
-        CFile << "err\n";
+//             int sz = vec.size();
+//             std::vector <std::pair<int, std::string>> son;
+//             for(int i = 0; i < sz; i ++)
+//             {
+//                 status.pop_back();
+//                 son.push_back(sign.back());
+//                 sign.pop_back();
+//             }
+//             GrammerTree.push_back(son);
+//             sign.push_back({GrammerTree.size() - 1, PtoG[Pnum].first});
+//             status.push_back(GOTO[status.back()][PtoG[Pnum].first]);
+//         }
+//     }
+//     if(!err)
+//     {
+//         CFile << "acc\n";
+//         printGrammerTree();
+//     }
+//     else
+//         CFile << "err\n";
 
-}
+// }
 
 int main() {
     openFile();
     LR1();
-    checkStr();
+    // checkStr();
     closeFile();
     return 0;
 }
