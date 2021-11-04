@@ -22,6 +22,9 @@ std::map<std::string, int> P; // key 产生式 value 第 i 个产生式
 std::map<std::string, std::vector<std::vector<std::pair<bool, int>>>> G; // 产生式 如 Si->X1X2X3...
 std::map<std::string, std::set<int>> first; // first 集
 std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
+std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
+//fir == -1:err   0:acc   1:sj   2:rj
+std::vector<std::map<std::string, int>> GOTO;
 
 struct Item {
     decltype(G.begin()) itrG;
@@ -429,34 +432,107 @@ void genC() {
 
 // pp's work
 void writeLR1Table() {
+    CFile << "\nLR(1) Table:\n";
+    int sz = I.size();
+    CFile << "ACTION:\n";
+    for(int i = 0; i < sz; i ++)
+    {
+        CFile << "I" << i << ": ";
+        for(auto str: VT)
+        {
+            CFile << str << "->";
+            if(ACTION[i][str].first == -1)
+                CFile << "err  ";
+            else if(ACTION[i][str].first == 0)
+                CFile << "acc  ";
+            else if(ACTION[i][str].first == 1)
+                CFile << "s" << ACTION[i][str].second << "  ";
+            else if(ACTION[i][str].first == 2)
+                CFile << "r" << ACTION[i][str].second << "  ";
+        }
+        CFile << "\n";
+    }
 
+    CFile << "GOTO:\n";
+    for(int i = 0; i < sz; i ++)
+    {
+        CFile << "I" << i << ": ";
+        for(auto str: VN)
+        {
+            CFile << str << "->";
+            if(GOTO[i][str] == -1)
+                CFile << "err  ";
+            else
+                CFile << GOTO[i][str] << "  ";
+        }
+        CFile << "\n";
+    }
+    std::cout << "Write LR1_Table done!" << "\n";
 }
+
 // pp's work
 void genLR1Table() {
-    /* LR1 表的构造步骤 1 PPT118:
-     * 已给出全局 std::map<std::tuple<int, int, int>, int> GO;
-     * GO(I, type, idx) = j, 表示从项目集 I 出发，遇到字符 type, idx，到达 j
-     * type = 0 表示终结符，idx 表示终结符在 VT 的下标
-     * type = 1 表示变元符，idx 表示终结符在 VN 的下标
-     * make_tuple(I, type, idx) 可获得对应 tuple，或直接 {I, type, idx}
-     * tie(I, type, idx) = tuple 可获得 I, type, idx
-     * 
-    */
+    //init
+    int sz = I.size();
+    std::map<std::string, std::pair<int, int>> temp1;
+    std::map<std::string, int> temp2;
 
-   /* LR1 表的构造步骤 2 PPT118:
-     * 下标遍历 std::vector<std::vector<Item>> I 可获得 I[k]
-     * 遍历 I[k] 可获得每个项目 [ A->..., vt ]
-     * 通过 P_ToString(item.itrG->first, item.itrG->second[item.branchId]) 获取产生式字符串
-     * 通过字符串在 map P 中查询出这是第几个产生式
-    */
+    for(auto str: VT)
+        temp1[str] = {-1, 0};
+    for(auto str: VN)
+        temp2[str] = -1;
 
-   /* LR1 表的构造步骤 3 PPT118:
-     * 和步骤 1 类似，但只需枚举 I 下标，以及变元 VN[0...VN.size())
-    */
+    for(int i = 0; i < sz; i ++)
+    {
+        ACTION.push_back(temp1);
+        GOTO.push_back(temp2);
 
-   /*
-    * 最后将 table 输出到 CFile 中，CFile 是 ofstream，参见 write CFile
-   */
+        for(auto &item: I[i])
+        {
+            auto &vec = item.itrG->second[item.branchId];
+            int pos = item.dotPos;
+            //condition 1
+            if(pos < vec.size() && !vec[pos].first)
+            {
+                std::string tmp_str = VT[vec[pos].second];
+                ACTION[i][tmp_str].first = 1;
+                ACTION[i][tmp_str].second = GO[std::make_tuple(i, 0, vec[pos].second)];
+            }
+            //condition 2
+            else if(pos == vec.size() && item.itrG->first != S)
+            {
+                std::string tmp_str = VT[item.right];
+                ACTION[i][tmp_str].first = 2;
+                
+                std::string stmp = P_ToString(item.itrG->first, vec);
+                ACTION[i][tmp_str].second = P[stmp] - 1;
+                /*
+                if (P.count(stmp)) { // 判断是否重复输入产生式
+                    std::cerr << "Multiple P input!: " << line << std::endl;
+                    closeFile();
+                    exit(0);
+                }
+                cntP++; // 产生式个数 + 1
+                P[stmp] = cntP;
+                G[gl].push_back(vec); // push_back 完整的右部信息
+                */
+            }
+            //condition 3
+            else if(pos == vec.size() && item.itrG->first == S)
+            {
+                std::string tmp_str = VT[item.right];
+                ACTION[i][tmp_str].first = 0;
+            }
+        }
+    }
+
+    for (auto &i: GO) 
+    {
+        int I, type, idx, J;
+        std::tie(I, type, idx) = i.first, J = i.second;
+        if(!type) continue;
+        GOTO[I][VN[idx]] = J;
+    }
 }
 
 void LR1() { // LR1分析法 入口
@@ -467,8 +543,11 @@ void LR1() { // LR1分析法 入口
     writeFirst();
 
     genC(); // 生成 LR(1) 项目集族 C
+
+    genLR1Table();//生成LR(1)分析表
     writeC();
     writeGO();
+    writeLR1Table();
 }
 
 int main() {

@@ -57,3 +57,27 @@ GO(I3, B) = 8
 GO(I6, a) = 6
 GO(I6, b) = 7
 GO(I6, B) = 9
+
+LR(1) Table:
+ACTION:
+I0: a->s3  b->s4  #->err  @->err  
+I1: a->s6  b->s7  #->err  @->err  
+I2: a->err  b->err  #->acc  @->err  
+I3: a->s3  b->s4  #->err  @->err  
+I4: a->r3  b->r3  #->err  @->err  
+I5: a->err  b->err  #->r1  @->err  
+I6: a->s6  b->s7  #->err  @->err  
+I7: a->err  b->err  #->r3  @->err  
+I8: a->r2  b->r2  #->err  @->err  
+I9: a->err  b->err  #->r2  @->err  
+GOTO:
+I0: A->err  B->1  S->2  S'->err  
+I1: A->err  B->5  S->err  S'->err  
+I2: A->err  B->err  S->err  S'->err  
+I3: A->err  B->8  S->err  S'->err  
+I4: A->err  B->err  S->err  S'->err  
+I5: A->err  B->err  S->err  S'->err  
+I6: A->err  B->9  S->err  S'->err  
+I7: A->err  B->err  S->err  S'->err  
+I8: A->err  B->err  S->err  S'->err  
+I9: A->err  B->err  S->err  S'->err  
