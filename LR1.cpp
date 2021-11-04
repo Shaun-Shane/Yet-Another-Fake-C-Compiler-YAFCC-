@@ -28,6 +28,7 @@ std::map<std::tuple<int, int, int>, int> GO; // GO(I, type, idx) = j;
 std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
 //fir == -1:err   0:acc   1:sj   2:rj
 std::vector<std::map<std::string, int>> GOTO;
+std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;//最后一个元素为root
 
 struct Item {
     decltype(G.begin()) itrG;
@@ -558,6 +559,18 @@ void LR1() { // LR1分析法 入口
     writeLR1Table();
 }
 
+void printGrammerTree()
+{
+    CFile << "\n";
+    int root = GrammerTree.size() - 1;
+    for(auto itr:GrammerTree)
+    {
+        for(auto son:itr)
+            CFile << son.first << " " << son.second << "   ";
+        CFile << "\n";
+    }
+}
+
 void checkStr()
 {
     std::string str;
@@ -565,9 +578,9 @@ void checkStr()
     str += '#';
     
     std::vector <int> status;
-    std::vector <std::string> sign;
+    std::vector <std::pair<int, std::string>> sign;
     status.push_back(0);
-    sign.push_back("#");
+    sign.push_back({-1, "#"});
 
     bool end = false; // sign of end
     bool err = false; // sign of err
@@ -586,7 +599,7 @@ void checkStr()
         output.clear();
         
         for(auto itr: sign)
-            output += itr;
+            output += itr.second;
         CFile << setiosflags(std::ios::left) << std::setw(10) << output;
 
         for(int i = p; i < str.length(); i ++)
@@ -609,7 +622,7 @@ void checkStr()
         else if(act.first == 1)
         {
             status.push_back(act.second);
-            sign.push_back(ch);
+            sign.push_back({-1, ch});
             ++ p;
         }
         else
@@ -619,17 +632,23 @@ void checkStr()
             vec = G[PtoG[Pnum].first][PtoG[Pnum].second];
 
             int sz = vec.size();
+            std::vector <std::pair<int, std::string>> son;
             for(int i = 0; i < sz; i ++)
             {
                 status.pop_back();
+                son.push_back(sign.back());
                 sign.pop_back();
             }
-            sign.push_back(PtoG[Pnum].first);
+            GrammerTree.push_back(son);
+            sign.push_back({GrammerTree.size() - 1, PtoG[Pnum].first});
             status.push_back(GOTO[status.back()][PtoG[Pnum].first]);
         }
     }
     if(!err)
+    {
         CFile << "acc\n";
+        printGrammerTree();
+    }
     else
         CFile << "err\n";
 
