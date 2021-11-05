@@ -28,7 +28,7 @@ class SyntaxTree {
                 this.root = parseInt(lines[i]);
             }
             else if (i == lines.length - 1) {
-                this.nodes[i - 2].symbol = lines[i].split(' ')[0];
+                this.nodes[this.root].symbol = lines[i].split(' ')[0];
             }
             else {
                 let arr = lines[i].split(' ');
@@ -178,7 +178,6 @@ class SyntaxTree {
         node.x += node.offsetx;
         if (changeFa && node.fa != -1)
             this.nodes[node.fa].sonXsum += node.x;
-        console.log(node.x, node.offsetx);
         for (let i = 0; i < node.son.length; i++) {
             this.nodes[node.son[i]].offsetx += node.offsetx;
             this.pushDown(node.son[i], false);

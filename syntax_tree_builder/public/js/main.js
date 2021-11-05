@@ -28,9 +28,9 @@ app.on('ready', () => {
     });
 });
 ipcMain.on("Syntax:window_ready", () => {
-    const appPath = app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPath();
-    app.isPackaged ? path.dirname(app.getPath('exe')) : app.getAppPath();
-    fs.readFile(path.join(appPath, '../SyntaxTree.txt'), 'utf8', (err, data) => {
+    const appPath = app.isPackaged ? path.dirname(app.getPath('exe')) : __dirname;
+    const filePath = app.isPackaged ? '../../SyntaxTree.txt' : '../../SyntaxTree.txt';
+    fs.readFile(path.join(appPath, filePath), 'utf8', (err, data) => {
         if (err) {
             console.log(err);
             return;
