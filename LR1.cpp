@@ -16,6 +16,7 @@ std::ifstream grammarFile;
 std::ifstream inputFile;
 std::ofstream firstSetFile;
 std::ofstream CFile;
+std::ofstream GTree;
 
 std::string S; // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT; // 终结符
@@ -62,6 +63,7 @@ void openFile() {
     CFile.open("CFile.txt");
     firstSetFile.open("First.txt");
     inputFile.open("Input.txt");
+    GTree.open("GrammarTree.txt");
 }
 
 void closeFile() {
@@ -69,6 +71,7 @@ void closeFile() {
     CFile.close();
     firstSetFile.close();
     inputFile.close();
+    GTree.close();
 }
 
 void writeFirst() { // 输出 first 集和
@@ -457,7 +460,7 @@ void genC() {
 }
 
 // pp's work
-/*void writeLR1Table() {
+void writeLR1Table() {
     CFile << "\nLR(1) Table:\n";
     int sz = I.size();
     CFile << "ACTION:\n";
@@ -515,7 +518,7 @@ void genLR1Table() {
 
         for(auto &item: I[i])
         {
-            auto &vec = item.itrG->second[item.pId];
+            auto &vec = P[item.pId].second;
             int pos = item.dotPos;
             //condition 1
             if(pos < vec.size() && !vec[pos].first)
@@ -525,16 +528,14 @@ void genLR1Table() {
                 ACTION[i][tmp_str].second = GO[std::make_tuple(i, 0, vec[pos].second)];
             }
             //condition 2
-            else if(pos == vec.size() && item.itrG->first != S)
+            else if(pos == vec.size() && P[item.pId].first != S)
             {
                 std::string tmp_str = VT[item.right];
                 ACTION[i][tmp_str].first = 2;
-                
-                std::string stmp = P_ToString(item.itrG->first, vec);
-                ACTION[i][tmp_str].second = P[stmp] - 1;
+                ACTION[i][tmp_str].second = item.pId;
             }
             //condition 3
-            else if(pos == vec.size() && item.itrG->first == S)
+            else if(pos == vec.size() && P[item.pId].first == S)
             {
                 std::string tmp_str = VT[item.right];
                 ACTION[i][tmp_str].first = 0;
@@ -549,7 +550,7 @@ void genLR1Table() {
         if(!type) continue;
         GOTO[I][VN[idx]] = J;
     }
-}*/
+}
 
 void LR1() { // LR1分析法 入口
     inputGrammar(); // 输入文法
@@ -562,111 +563,124 @@ void LR1() { // LR1分析法 入口
     genC(); // 生成 LR(1) 项目集族 C
     std::cerr << __LINE__ << std::endl;
 
-    // genLR1Table();//生成LR(1)分析表
+    genLR1Table();//生成LR(1)分析表
     writeC();
     writeGO();
-    //writeLR1Table();
+    writeLR1Table();
 }
 
 void printGrammerTree()
 {
-    CFile << "\n";
     int root = GrammerTree.size() - 1;
+    GTree << root << "\n";
     for(auto itr:GrammerTree)
     {
         for(auto son:itr)
-            CFile << son.first << " " << son.second << "   ";
-        CFile << "\n";
+            GTree << son.first << " " << son.second << " ";
+        GTree << "\n";
     }
+
+    GTree << S << "\n";
+    //输出起始子（如果需要）
 }
 
-// void checkStr()
-// {
-//     std::string str;
-//     inputFile >> str;
-//     str += '#';
+void checkStr()
+{
+    std::string str;
+    inputFile >> str;
+    str += '#';
     
-//     std::vector <int> status;
-//     std::vector <std::pair<int, std::string>> sign;
-//     status.push_back(0);
-//     sign.push_back({-1, "#"});
+    std::vector <int> status;
+    std::vector <std::pair<int, std::string>> sign;
+    status.push_back(0);
+    sign.push_back({-1, "#"});
 
-//     bool end = false; // sign of end
-//     bool err = false; // sign of err
-//     int p = 0;
-//     CFile << "\n";
+    bool end = false; // sign of end
+    bool err = false; // sign of err
+    int p = 0;
+    CFile << "\n";
 
-//     CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
-//     CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
-//     CFile << "input" << "\n";
-//     while(!end)
-//     {
-//         std::string output;
-//         for(auto itr: status)
-//             output += std::to_string(itr);
-//         CFile << setiosflags(std::ios::left) << std::setw(10) << output;
-//         output.clear();
+    CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
+    CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
+    CFile << "input" << "\n";
+    while(!end)
+    {
+        std::string output;
+        for(auto itr: status)
+            output += std::to_string(itr);
+        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+        output.clear();
         
-//         for(auto itr: sign)
-//             output += itr.second;
-//         CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+        for(auto itr: sign)
+            output += itr.second;
+        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
 
-//         for(int i = p; i < str.length(); i ++)
-//             CFile << str[i];
-//         CFile << "\n";
+        for(int i = p; i < str.length(); i ++)
+            CFile << str[i];
+        CFile << "\n";
 
-//         int now = status.back();
-//         std::pair <int, int> act;
-//         std::string ch;
-//         ch += str[p];
-//         act = ACTION[now][ch];
+        int now = status.back();
+        std::pair <int, int> act;
+        std::string ch;
+        ch += str[p];
+        act = ACTION[now][ch];
 
-//         if(act.first == -1)
-//         {
-//             end = true;
-//             err = true;
-//         }
-//         else if(act.first == 0)
-//             end = true;
-//         else if(act.first == 1)
-//         {
-//             status.push_back(act.second);
-//             sign.push_back({-1, ch});
-//             ++ p;
-//         }
-//         else
-//         {
-//             int Pnum = act.second;
-//             std::vector<std::pair<bool, int>> vec;
-//             vec = G[PtoG[Pnum].first][PtoG[Pnum].second];
+        if(act.first == -1)
+        {
+            end = true;
+            err = true;
+        }
+        else if(act.first == 0)
+        {
+            std::vector <std::pair<int, std::string>> son;
+            while(sign.back().second != "#")
+            {
+                status.pop_back();
+                son.push_back(sign.back());
+                sign.pop_back();
+            }
+            GrammerTree.push_back(son);
+            end = true;
+        }
+        else if(act.first == 1)
+        {
+            status.push_back(act.second);
+            sign.push_back({-1, ch});
+            ++ p;
+        }
+        else
+        {
+            int Pnum = act.second;
+            std::vector<std::pair<bool, int>> vec;
+            vec = P[Pnum].second;
 
-//             int sz = vec.size();
-//             std::vector <std::pair<int, std::string>> son;
-//             for(int i = 0; i < sz; i ++)
-//             {
-//                 status.pop_back();
-//                 son.push_back(sign.back());
-//                 sign.pop_back();
-//             }
-//             GrammerTree.push_back(son);
-//             sign.push_back({GrammerTree.size() - 1, PtoG[Pnum].first});
-//             status.push_back(GOTO[status.back()][PtoG[Pnum].first]);
-//         }
-//     }
-//     if(!err)
-//     {
-//         CFile << "acc\n";
-//         printGrammerTree();
-//     }
-//     else
-//         CFile << "err\n";
+            int sz = vec.size();
+            std::vector <std::pair<int, std::string>> son;
+            for(int i = 0; i < sz; i ++)
+            {
+                status.pop_back();
+                son.push_back(sign.back());
+                sign.pop_back();
+            }
+            GrammerTree.push_back(son);
+            sign.push_back({GrammerTree.size() - 1, P[Pnum].first});
+            status.push_back(GOTO[status.back()][P[Pnum].first]);
+        }
+    }
+    if(!err)
+    {
+        CFile << "acc\n";
+        printGrammerTree();
+    }
+    else
+        CFile << "err\n";
 
-// }
+}
 
 int main() {
     openFile();
     LR1();
-    // checkStr();
+    checkStr();
     closeFile();
     return 0;
 }
