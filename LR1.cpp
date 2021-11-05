@@ -63,7 +63,7 @@ void openFile() {
     CFile.open("CFile.txt");
     firstSetFile.open("First.txt");
     inputFile.open("Input.txt");
-    GTree.open("GrammerTree.txt");
+    GTree.open("GrammarTree.txt");
 }
 
 void closeFile() {
@@ -572,12 +572,14 @@ void LR1() { // LR1分析法 入口
 void printGrammerTree()
 {
     int root = GrammerTree.size() - 1;
+    GTree << root << "\n";
     for(auto itr:GrammerTree)
     {
         for(auto son:itr)
-            GTree << son.first << " " << son.second << "   ";
+            GTree << son.first << " " << son.second << " ";
         GTree << "\n";
     }
+
     GTree << S << "\n";
     //输出起始子（如果需要）
 }
@@ -629,7 +631,17 @@ void checkStr()
             err = true;
         }
         else if(act.first == 0)
+        {
+            std::vector <std::pair<int, std::string>> son;
+            while(sign.back().second != "#")
+            {
+                status.pop_back();
+                son.push_back(sign.back());
+                sign.pop_back();
+            }
+            GrammerTree.push_back(son);
             end = true;
+        }
         else if(act.first == 1)
         {
             status.push_back(act.second);
