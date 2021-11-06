@@ -3,7 +3,6 @@
 .vscode
 node_modules
 materialize
-syntax_tree_builder/build
 syntax_tree_builder/package-lock.json
 syntax_tree_builder/package.json
 syntax_tree_builder/yarn.lock
