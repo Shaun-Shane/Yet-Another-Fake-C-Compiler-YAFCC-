@@ -1,0 +1,1 @@
+g++ -o LR1.exe LR1.cpp -std=c++11 -DNDEBUG -O4 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic

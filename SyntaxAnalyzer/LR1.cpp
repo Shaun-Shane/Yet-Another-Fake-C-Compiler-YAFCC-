@@ -279,7 +279,7 @@ void inputGrammar() {
 // 求 first 集
 void getFirstSet() {
     bool end = false;
-    for (int i = 0; i < VT.size(); i++)
+    for (int i = 0; i < VT.size(); i++) // 终结符 a 的 first 集为 a，epsilon 除外
         if (VT[i] != "@") first[VT[i]].insert(i);
     while (!end) {
         end = true;
@@ -378,7 +378,7 @@ void genClosure(std::set<Item>& Ii) {
             auto itr = G.find(VN[idx]);  // 获取 .Bβ 的 B -> 产生式迭代器
 
             if (itr == G.end()) {
-                std::cerr << "GenClosure error! line: " << __LINE__
+                std::cerr << "GenClosure error, checkP! line: " << __LINE__
                           << std::endl;
                 return;
             }
@@ -444,7 +444,7 @@ void genC() {
                 to = I.size();
                 I.push_back(newI);
             }
-            GO[{i, 1, idx}] = to;  // GO(I, X) = j; X in VT
+            GO[{i, 1, idx}] = to;  // GO(I, X) = j; X in VN
         }
 
         for (int idx = 0; idx < VT.size() - 2;
@@ -683,5 +683,6 @@ int main() {
     LR1();
     checkStr();
     closeFile();
+    system("pause");
     return 0;
 }

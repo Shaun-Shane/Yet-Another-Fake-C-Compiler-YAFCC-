@@ -1,40 +1,40 @@
 const { ipcRenderer } = require('electron')
 
-class SyntaxTreeNode {
+class SyntaxTreeNode { // 语法树节点
     constructor(public id: number, public fa: number = -1, public x: number = -1, public y: number = -1,
-        /*public sonXsum = .0,*/ public offsetx: number = 0, public symbol: string = "") { }
-    public son: Array<number>
+        public offsetx: number = 0, public symbol: string = "") { }
+    public son: Array<number> // 子节点数组
 };
 
-class SyntaxTree {
-    nodes : Array<SyntaxTreeNode> ;
+class SyntaxTree { // 语法树
+    nodes : Array<SyntaxTreeNode> ; // 节点数组
     atDepth: Array<Array<number>>; // 深度为 depth
-    radius: number = 30;
-    root: number;
+    radius: number = 30; // 绘制出的节点半径 px
+    root: number; // 根节点标号
     
-    buildFromFile(data): void { 
+    buildFromFile(data): void { // 读入语法树信息
         let lines = data.split('\n');
-        this.nodes = new Array<SyntaxTreeNode>(lines.length - 2);
+        this.nodes = new Array<SyntaxTreeNode>(lines.length - 2); // 初始化
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i] = new SyntaxTreeNode(i);
-            this.nodes[i].son = new Array<number>();
+            this.nodes[i].son = new Array<number>(); // 初始化
         }
         this.atDepth = new Array<Array<number>>();
-        for (let i = 0; i < lines.length; i++) {
-            if (i == 0) {
+        for (let i = 0; i < lines.length; i++) { // 处理语法树信息
+            if (i == 0) { // 获取根节点标号
                 this.root = parseInt(lines[i]);
-            } else if (i == lines.length - 1) {
+            } else if (i == lines.length - 1) { // 根节点
                 this.nodes[this.root].symbol = lines[i].split(' ')[0];
-            } else {
+            } else { // 解析子节点 当前节点 id = i - 1
                 let arr = lines[i].split(' ');
                 for (let j = arr.length - 2; j >= 1; j -= 2) {
-                    let symbol = arr[j];
-                    let sonId = parseInt(arr[j - 1]);
+                    let symbol = arr[j]; // 子节点符号
+                    let sonId = parseInt(arr[j - 1]); // 子节点 id
                     if (sonId != -1) this.nodes[i - 1].son.push(sonId), this.nodes[sonId].symbol = symbol;
                     else {
                         this.nodes.length++;
                         this.nodes[this.nodes.length - 1] = new SyntaxTreeNode(this.nodes.length -1);
-                        this.nodes[this.nodes.length - 1].son = new Array<number>();
+                        this.nodes[this.nodes.length - 1].son = new Array<number>(); // 初始化
 
                         this.nodes[i - 1].son.push(this.nodes.length - 1);
                         this.nodes[this.nodes.length - 1].symbol = symbol;
@@ -43,19 +43,17 @@ class SyntaxTree {
             }
         }
 
-        // for (let i = 0; i < this.nodes.length; i++) console.log(this.nodes[i].symbol);
-
-        this.initD3Arrow();
+        this.initD3Arrow(); // 初始化 d3 箭头
         this.dfs(this.root); // 深搜处理出每一层的节点
         this.setCoordinates(); // 设置坐标
         this.setContainerSize(); // 设置 svg 大小
-        this.drawTree();
+        this.drawTree(); // 绘制语法树
     }
 
-    setContainerSize(): void {
+    setContainerSize(): void { // 根据语法树大小设置 svg 大小
         const svg = (<SVGAElement>document.querySelector('#sh_circleContainer'));
         svg.style.height = `${svg.getBBox().y + this.atDepth.length * this.radius * 4 + this.radius * 4}`; // 设置 svg 容器高度
-        let maxX = 0;
+        let maxX = 0; // 获取最大 x 最表
         for (let i = 0; i < this.nodes.length; i++) maxX = Math.max(maxX, this.nodes[i].x + this.radius * 4);
         svg.style.width = `${svg.getBBox().x + maxX}`;
     }
@@ -66,29 +64,29 @@ class SyntaxTree {
 
         if (this.atDepth.length <= depth) {
             this.atDepth.length = depth + 1;
-            this.atDepth[depth] = new Array<number>();
+            this.atDepth[depth] = new Array<number>(); // 动态设置大小
         }
         this.atDepth[depth].push(x); // 同一深度的节点放在一起
 
-        for (let i = 0; i < node.son.length; i++) {
-            this.nodes[node.son[i]].fa = x;
+        for (let i = 0; i < node.son.length; i++) { // 继续遍历子节点
+            this.nodes[node.son[i]].fa = x; // 设置节点父亲
             this.dfs(node.son[i], depth + 1);
         }
     }
 
     setCoordinates(): void { // O(n^2)
-        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) {
+        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) { // 预处理每个深度从左到右节点坐标
             let curPos = 0, delta = this.radius * 4;
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
                 node.x = curPos, curPos += delta;
             }
-        }
+        } // 可以保证子树不会交叉
 
-        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) {
+        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) { // 从深到浅设置节点实际位置
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
-                if (node.son.length != 0) {
+                if (node.son.length != 0) { // 叶子节点跳过
                     let postmp = (Math.round(node.son.length) % 2 == 0) ? (this.nodes[ node.son[ 0 ] ].x
                         + this.nodes[ node.son[ node.son.length - 1 ] ].x) / 2 :
                         this.nodes[ node.son[ Math.trunc(node.son.length / 2) ] ].x;
@@ -111,13 +109,14 @@ class SyntaxTree {
             }
         }
 
+        // 如果有节点 x 坐标过小，对整个语法树进行平移
         let minPos = 1e9;
         for (let i = 0; i < this.nodes.length; i++) minPos = Math.min(minPos, this.nodes[i].x);
         if (minPos < this.radius * 2) this.nodes[this.root].offsetx += this.radius * 2 - minPos;
         this.pushDown(this.root, true);
     }
 
-    pushDown(x: number, changeFa: boolean): void {
+    pushDown(x: number, changeFa: boolean): void { // 下放 offset 标记，使整颗子树平移
         let node = this.nodes[x];
         if (node.offsetx == 0) return;
         node.x += node.offsetx;
@@ -128,7 +127,7 @@ class SyntaxTree {
         node.offsetx = 0;
     }
 
-    drawTree(): void {
+    drawTree(): void { // 绘制语法树
         d3.select("#g_circle_and_arrow")
             .selectAll("g")
             .data(this.nodes)
@@ -185,8 +184,7 @@ class SyntaxTree {
             });
     }
 
-    initD3Arrow(): void {
-        // arrow
+    initD3Arrow(): void { // 初始化 d3 箭头
         var svg = d3.select("svg");
         var defs = svg.append("defs");
         var arrowMarker = defs.append("marker")
@@ -230,7 +228,7 @@ window.onload = (e) => {
     ipcRenderer.send("Syntax:window_ready"); // 窗口加载成功
 }
 
-ipcRenderer.on("Syntax:data", (e, data, dir) => {
+ipcRenderer.on("Syntax:data", (e, data, dir) => { // 接收语法树信息
     console.log(dir);
     syntaxTree.buildFromFile(data);
 });
