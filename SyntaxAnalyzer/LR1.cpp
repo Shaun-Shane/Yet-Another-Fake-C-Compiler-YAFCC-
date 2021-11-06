@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#define LEX_ANALYZE
 #define DISPLAY_SYNTAX_TREE
 #define debug(x) std::cerr << #x << " = " << x << std::endl
 
@@ -581,7 +582,7 @@ void LR1() {         // LR1分析法 入口
 }
 
 void printGrammarTree() {
-    GTree.open("syntax_tree_builder/SyntaxTree.txt");
+    GTree.open("../syntax_tree_builder/SyntaxTree.txt");
     int root = GrammerTree.size() - 1;
     GTree << root << "\n";
     for (const auto& itr : GrammerTree) {
@@ -593,11 +594,14 @@ void printGrammarTree() {
     //输出起始子（如果需要）
     GTree.close();
 #ifdef DISPLAY_SYNTAX_TREE
-    system("start syntax_tree_builder/build/win-unpacked/syntax_tree.exe");
+    system("start ../syntax_tree_builder/build/win-unpacked/syntax_tree.exe");
 #endif
 }
 
 void checkStr() {
+#ifdef LEX_ANALYZE
+    system("start ../LexAnalyzer/LexAnalyse.exe");
+#endif
     std::string str;
     inputFile >> str;
     str += '#';
