@@ -1,2 +1,4 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+*.exe filter=lfs diff=lfs merge=lfs -text
+D:/GitRepo/Compile-Principle-Course-Work/syntax_tree_builder/build/win-unpacked/syntax_tree.exe filter=lfs diff=lfs merge=lfs -text
