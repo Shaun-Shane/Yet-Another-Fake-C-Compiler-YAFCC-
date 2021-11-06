@@ -5,7 +5,6 @@
 #include <map>
 #include <set>
 #include <sstream>
-#include <stack>
 #include <string>
 #include <utility>
 #include <vector>
@@ -24,7 +23,6 @@ std::vector<std::string> VN;  // 非终结符
 
 std::vector<std::pair<std::string, std::vector<std::pair<bool, int>>>>
     P;  // S -> X1X2X3...
-// 产生式 如 Si->X1X2X3...
 std::map<std::string, std::vector<std::size_t>>
     G;  // 产生式 如 Si->branch1 | branch2 ...
 
@@ -56,7 +54,6 @@ void openFile() {
     CFile.open("CFile.txt");
     firstSetFile.open("First.txt");
     inputFile.open("Input.txt");
-    GTree.open("syntax_tree_builder/SyntaxTree.txt");
 }
 
 void closeFile() {
@@ -204,8 +201,8 @@ void inputGrammar() {
 
     printVN_VT_S();  // for debug
 
-    int cntP(0);                          // 产生式个数
     while (getline(grammarFile, line)) {  // 读入产生式
+        if (line == "#") break;
         ss.clear(), ss << line;           // 读入文法
         std::string gl, gr;
         char ch;
@@ -273,11 +270,6 @@ void inputGrammar() {
         }
         P.emplace_back(gl, vec);  // 存储一条产生式，产生式数目 + 1
         G[gl].push_back(P.size() - 1);
-        // P[stmp] = cntP;
-        // G[gl].push_back(vec); // push_back 完整的右部信息
-        // std::pair<std::string, int> tmp_pr;
-        // tmp_pr.first = gl; tmp_pr.second = G[gl].size() - 1;
-        // PtoG.push_back(tmp_pr);
     }
     ss.clear();
 }
@@ -580,6 +572,7 @@ void LR1() {         // LR1分析法 入口
 }
 
 void printGrammarTree() {
+    GTree.open("syntax_tree_builder/SyntaxTree.txt");
     int root = GrammerTree.size() - 1;
     GTree << root << "\n";
     for (auto itr : GrammerTree) {

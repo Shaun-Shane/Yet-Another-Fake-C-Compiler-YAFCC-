@@ -118,7 +118,22 @@ class SyntaxTree {
             minPos = Math.min(minPos, this.nodes[i].x);
         if (minPos < this.radius * 2)
             this.nodes[this.root].offsetx += this.radius * 2 - minPos;
-        this.pushDown(this.root, false);
+        this.pushDown(this.root, true);
+    }
+    pushDown(x, changeFa) {
+        let node = this.nodes[x];
+        if (node.offsetx == 0)
+            return;
+        if (changeFa && node.fa != -1)
+            this.nodes[node.fa].sonXsum -= node.x;
+        node.x += node.offsetx;
+        if (changeFa && node.fa != -1)
+            this.nodes[node.fa].sonXsum += node.x;
+        for (let i = 0; i < node.son.length; i++) {
+            this.nodes[node.son[i]].offsetx += node.offsetx;
+            this.pushDown(node.son[i], true);
+        }
+        node.offsetx = 0;
     }
     drawTree() {
         d3.select("#g_circle_and_arrow")
@@ -170,19 +185,6 @@ class SyntaxTree {
             // exit phase
             return exit.remove();
         });
-    }
-    pushDown(x, changeFa) {
-        let node = this.nodes[x];
-        if (changeFa && node.fa != -1)
-            this.nodes[node.fa].sonXsum -= node.x;
-        node.x += node.offsetx;
-        if (changeFa && node.fa != -1)
-            this.nodes[node.fa].sonXsum += node.x;
-        for (let i = 0; i < node.son.length; i++) {
-            this.nodes[node.son[i]].offsetx += node.offsetx;
-            this.pushDown(node.son[i], false);
-        }
-        node.offsetx = 0;
     }
     initD3Arrow() {
         // arrow

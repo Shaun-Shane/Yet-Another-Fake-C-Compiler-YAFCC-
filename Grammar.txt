@@ -1,3 +1,14 @@
+a ^ ( ) ,
+S T S'
+S'
+S'->S
+S->a
+S->^
+S->( T )
+T->T , S
+T->S
+#
+
 a b
 S A B S'
 S'
