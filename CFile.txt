@@ -1,196 +1,98 @@
 I0:
 [ S'->.S , # ]
-[ S->.a , # ]
-[ S->.^ , # ]
-[ S->.(T) , # ]
+[ S->.BB , # ]
+[ B->.aB , a ]
+[ B->.aB , b ]
+[ B->.b , a ]
+[ B->.b , b ]
 
 I1:
-[ S'->S. , # ]
+[ S->B.B , # ]
+[ B->.aB , # ]
+[ B->.b , # ]
 
 I2:
-[ S->.a , ) ]
-[ S->.a , , ]
-[ S->.^ , ) ]
-[ S->.^ , , ]
-[ S->.(T) , ) ]
-[ S->.(T) , , ]
-[ S->(.T) , # ]
-[ T->.T,S , ) ]
-[ T->.T,S , , ]
-[ T->.S , ) ]
-[ T->.S , , ]
+[ S'->S. , # ]
 
 I3:
-[ S->^. , # ]
+[ B->.aB , a ]
+[ B->.aB , b ]
+[ B->a.B , a ]
+[ B->a.B , b ]
+[ B->.b , a ]
+[ B->.b , b ]
 
 I4:
-[ S->a. , # ]
+[ B->b. , a ]
+[ B->b. , b ]
 
 I5:
-[ T->S. , ) ]
-[ T->S. , , ]
+[ S->BB. , # ]
 
 I6:
-[ S->(T.) , # ]
-[ T->T.,S , ) ]
-[ T->T.,S , , ]
+[ B->.aB , # ]
+[ B->a.B , # ]
+[ B->.b , # ]
 
 I7:
-[ S->.a , ) ]
-[ S->.a , , ]
-[ S->.^ , ) ]
-[ S->.^ , , ]
-[ S->.(T) , ) ]
-[ S->.(T) , , ]
-[ S->(.T) , ) ]
-[ S->(.T) , , ]
-[ T->.T,S , ) ]
-[ T->.T,S , , ]
-[ T->.S , ) ]
-[ T->.S , , ]
+[ B->b. , # ]
 
 I8:
-[ S->^. , ) ]
-[ S->^. , , ]
+[ B->aB. , a ]
+[ B->aB. , b ]
 
 I9:
-[ S->a. , ) ]
-[ S->a. , , ]
+[ B->aB. , # ]
 
-I10:
-[ S->(T). , # ]
-
-I11:
-[ S->.a , ) ]
-[ S->.a , , ]
-[ S->.^ , ) ]
-[ S->.^ , , ]
-[ S->.(T) , ) ]
-[ S->.(T) , , ]
-[ T->T,.S , ) ]
-[ T->T,.S , , ]
-
-I12:
-[ S->(T.) , ) ]
-[ S->(T.) , , ]
-[ T->T.,S , ) ]
-[ T->T.,S , , ]
-
-I13:
-[ T->T,S. , ) ]
-[ T->T,S. , , ]
-
-I14:
-[ S->(T). , ) ]
-[ S->(T). , , ]
-
-GO(I0, () = 2
-GO(I0, ^) = 3
-GO(I0, a) = 4
-GO(I0, S) = 1
-GO(I2, () = 7
-GO(I2, ^) = 8
-GO(I2, a) = 9
-GO(I2, S) = 5
-GO(I2, T) = 6
-GO(I6, )) = 10
-GO(I6, ,) = 11
-GO(I7, () = 7
-GO(I7, ^) = 8
-GO(I7, a) = 9
-GO(I7, S) = 5
-GO(I7, T) = 12
-GO(I11, () = 7
-GO(I11, ^) = 8
-GO(I11, a) = 9
-GO(I11, S) = 13
-GO(I12, )) = 14
-GO(I12, ,) = 11
+GO(I0, a) = 3
+GO(I0, b) = 4
+GO(I0, B) = 1
+GO(I0, S) = 2
+GO(I1, a) = 6
+GO(I1, b) = 7
+GO(I1, B) = 5
+GO(I3, a) = 3
+GO(I3, b) = 4
+GO(I3, B) = 8
+GO(I6, a) = 6
+GO(I6, b) = 7
+GO(I6, B) = 9
 
 LR(1) Table:
 ACTION:
-I0: (->s2  )->err  ,->err  ^->s3  a->s4  #->err  @->err  
-I1: (->err  )->err  ,->err  ^->err  a->err  #->acc  @->err  
-I2: (->s7  )->err  ,->err  ^->s8  a->s9  #->err  @->err  
-I3: (->err  )->err  ,->err  ^->err  a->err  #->r2  @->err  
-I4: (->err  )->err  ,->err  ^->err  a->err  #->r1  @->err  
-I5: (->err  )->r5  ,->r5  ^->err  a->err  #->err  @->err  
-I6: (->err  )->s10  ,->s11  ^->err  a->err  #->err  @->err  
-I7: (->s7  )->err  ,->err  ^->s8  a->s9  #->err  @->err  
-I8: (->err  )->r2  ,->r2  ^->err  a->err  #->err  @->err  
-I9: (->err  )->r1  ,->r1  ^->err  a->err  #->err  @->err  
-I10: (->err  )->err  ,->err  ^->err  a->err  #->r3  @->err  
-I11: (->s7  )->err  ,->err  ^->s8  a->s9  #->err  @->err  
-I12: (->err  )->s14  ,->s11  ^->err  a->err  #->err  @->err  
-I13: (->err  )->r4  ,->r4  ^->err  a->err  #->err  @->err  
-I14: (->err  )->r3  ,->r3  ^->err  a->err  #->err  @->err  
+I0:     a->s3           b->s4           #->err          @->err          
+I1:     a->s6           b->s7           #->err          @->err          
+I2:     a->err          b->err          #->acc          @->err          
+I3:     a->s3           b->s4           #->err          @->err          
+I4:     a->r3           b->r3           #->err          @->err          
+I5:     a->err          b->err          #->r1           @->err          
+I6:     a->s6           b->s7           #->err          @->err          
+I7:     a->err          b->err          #->r3           @->err          
+I8:     a->r2           b->r2           #->err          @->err          
+I9:     a->err          b->err          #->r2           @->err          
 GOTO:
-I0: S->1  S'->err  T->err  
-I1: S->err  S'->err  T->err  
-I2: S->5  S'->err  T->6  
-I3: S->err  S'->err  T->err  
-I4: S->err  S'->err  T->err  
-I5: S->err  S'->err  T->err  
-I6: S->err  S'->err  T->err  
-I7: S->5  S'->err  T->12  
-I8: S->err  S'->err  T->err  
-I9: S->err  S'->err  T->err  
-I10: S->err  S'->err  T->err  
-I11: S->13  S'->err  T->err  
-I12: S->err  S'->err  T->err  
-I13: S->err  S'->err  T->err  
-I14: S->err  S'->err  T->err  
+I0:     A->err          B->1            S->2            S'->err         
+I1:     A->err          B->5            S->err          S'->err         
+I2:     A->err          B->err          S->err          S'->err         
+I3:     A->err          B->8            S->err          S'->err         
+I4:     A->err          B->err          S->err          S'->err         
+I5:     A->err          B->err          S->err          S'->err         
+I6:     A->err          B->9            S->err          S'->err         
+I7:     A->err          B->err          S->err          S'->err         
+I8:     A->err          B->err          S->err          S'->err         
+I9:     A->err          B->err          S->err          S'->err         
 
-status    sign      input
-0         #         (((((a,a),^,(a)),a),a),a)#
-02        #(        ((((a,a),^,(a)),a),a),a)#
-027       #((       (((a,a),^,(a)),a),a),a)#
-0277      #(((      ((a,a),^,(a)),a),a),a)#
-02777     #((((     (a,a),^,(a)),a),a),a)#
-027777    #(((((    a,a),^,(a)),a),a),a)#
-0277779   #(((((a   ,a),^,(a)),a),a),a)#
-0277775   #(((((S   ,a),^,(a)),a),a),a)#
-02777712  #(((((T   ,a),^,(a)),a),a),a)#
-0277771211#(((((T,  a),^,(a)),a),a),a)#
-02777712119#(((((T,a ),^,(a)),a),a),a)#
-027777121113#(((((T,S ),^,(a)),a),a),a)#
-02777712  #(((((T   ),^,(a)),a),a),a)#
-0277771214#(((((T)  ,^,(a)),a),a),a)#
-027775    #((((S    ,^,(a)),a),a),a)#
-0277712   #((((T    ,^,(a)),a),a),a)#
-027771211 #((((T,   ^,(a)),a),a),a)#
-0277712118#((((T,^  ,(a)),a),a),a)#
-02777121113#((((T,S  ,(a)),a),a),a)#
-0277712   #((((T    ,(a)),a),a),a)#
-027771211 #((((T,   (a)),a),a),a)#
-0277712117#((((T,(  a)),a),a),a)#
-02777121179#((((T,(a )),a),a),a)#
-02777121175#((((T,(S )),a),a),a)#
-027771211712#((((T,(T )),a),a),a)#
-02777121171214#((((T,(T)),a),a),a)#
-02777121113#((((T,S  ),a),a),a)#
-0277712   #((((T    ),a),a),a)#
-027771214 #((((T)   ,a),a),a)#
-02775     #(((S     ,a),a),a)#
-027712    #(((T     ,a),a),a)#
-02771211  #(((T,    a),a),a)#
-027712119 #(((T,a   ),a),a)#
-0277121113#(((T,S   ),a),a)#
-027712    #(((T     ),a),a)#
-02771214  #(((T)    ,a),a)#
-0275      #((S      ,a),a)#
-02712     #((T      ,a),a)#
-0271211   #((T,     a),a)#
-02712119  #((T,a    ),a)#
-027121113 #((T,S    ),a)#
-02712     #((T      ),a)#
-0271214   #((T)     ,a)#
-025       #(S       ,a)#
-026       #(T       ,a)#
-02611     #(T,      a)#
-026119    #(T,a     )#
-0261113   #(T,S     )#
-026       #(T       )#
-02610     #(T)      #
-01        #S        #
+status              sign                input
+0                   #                   aabab#
+03                  #a                  abab#
+033                 #aa                 bab#
+0334                #aab                ab#
+0338                #aaB                ab#
+038                 #aB                 ab#
+01                  #B                  ab#
+016                 #Ba                 b#
+0167                #Bab                #
+0169                #BaB                #
+015                 #BB                 #
+02                  #S                  #
 acc

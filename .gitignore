@@ -22,7 +22,6 @@ syntax_tree_builder/tsconfig.json
 # Compiled Dynamic libraries
 *.so
 *.dylib
-*.dll
 
 # Fortran module files
 *.mod
@@ -32,9 +31,7 @@ syntax_tree_builder/tsconfig.json
 *.lai
 *.la
 *.a
-*.lib
 
 # Executables
-*.exe
 *.out
 *.app

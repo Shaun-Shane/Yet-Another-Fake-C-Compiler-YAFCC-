@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#define DISPLAY_SYNTAX_TREE
 #define debug(x) std::cerr << #x << " = " << x << std::endl
 
 std::ifstream grammarFile;
@@ -479,30 +480,38 @@ void writeLR1Table() {
     int sz = I.size();
     CFile << "ACTION:\n";
     for (int i = 0; i < sz; i++) {
-        CFile << "I" << i << ": ";
+        std::string output;
+        output = "I" + std::to_string(i) + ": ";
+        CFile << setiosflags(std::ios::left) << std::setw(8) << output;
         for (auto str : VT) {
-            CFile << str << "->";
+            output.clear();
+            output = str + "->";
             if (ACTION[i][str].first == -1)
-                CFile << "err  ";
+                output += "err  ";
             else if (ACTION[i][str].first == 0)
-                CFile << "acc  ";
+                output += "acc  ";
             else if (ACTION[i][str].first == 1)
-                CFile << "s" << ACTION[i][str].second << "  ";
+                output += "s" + std::to_string(ACTION[i][str].second) + "  ";
             else if (ACTION[i][str].first == 2)
-                CFile << "r" << ACTION[i][str].second << "  ";
+                output += "r" + std::to_string(ACTION[i][str].second) + "  ";
+            CFile << setiosflags(std::ios::left) << std::setw(16) << output;
         }
         CFile << "\n";
     }
 
     CFile << "GOTO:\n";
     for (int i = 0; i < sz; i++) {
-        CFile << "I" << i << ": ";
-        for (auto str : VN) {
-            CFile << str << "->";
+        std::string output;
+        output = "I" + std::to_string(i) + ": ";
+        CFile << setiosflags(std::ios::left) << std::setw(8) << output;
+        for (auto& str : VN) {
+            output.clear();
+            output = str + "->";
             if (GOTO[i][str] == -1)
-                CFile << "err  ";
+                output += "err  ";
             else
-                CFile << GOTO[i][str] << "  ";
+                output += std::to_string(GOTO[i][str]) + "  ";
+            CFile << setiosflags(std::ios::left) << std::setw(16) << output;
         }
         CFile << "\n";
     }
@@ -517,8 +526,8 @@ void genLR1Table() {
     std::map<std::string, std::pair<int, int>> temp1;
     std::map<std::string, int> temp2;
 
-    for (auto str : VT) temp1[str] = {-1, 0};
-    for (auto str : VN) temp2[str] = -1;
+    for (auto& str : VT) temp1[str] = {-1, 0};
+    for (auto& str : VN) temp2[str] = -1;
 
     for (int i = 0; i < sz; i++) {
         ACTION.push_back(temp1);
@@ -575,15 +584,17 @@ void printGrammarTree() {
     GTree.open("syntax_tree_builder/SyntaxTree.txt");
     int root = GrammerTree.size() - 1;
     GTree << root << "\n";
-    for (auto itr : GrammerTree) {
-        for (auto son : itr) GTree << son.first << " " << son.second << " ";
+    for (const auto& itr : GrammerTree) {
+        for (const auto& son : itr) GTree << son.first << " " << son.second << " ";
         GTree << "\n";
     }
 
     GTree << S;
     //输出起始子（如果需要）
     GTree.close();
+#ifdef DISPLAY_SYNTAX_TREE
     system("start syntax_tree_builder/build/win-unpacked/syntax_tree.exe");
+#endif
 }
 
 void checkStr() {
@@ -601,18 +612,18 @@ void checkStr() {
     int p = 0;
     CFile << "\n";
 
-    CFile << setiosflags(std::ios::left) << std::setw(10) << "status";
-    CFile << setiosflags(std::ios::left) << std::setw(10) << "sign";
+    CFile << setiosflags(std::ios::left) << std::setw(20) << "status";
+    CFile << setiosflags(std::ios::left) << std::setw(20) << "sign";
     CFile << "input"
           << "\n";
     while (!end) {
         std::string output;
         for (auto itr : status) output += std::to_string(itr);
-        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+        CFile << setiosflags(std::ios::left) << std::setw(20) << output;
         output.clear();
 
         for (auto itr : sign) output += itr.second;
-        CFile << setiosflags(std::ios::left) << std::setw(10) << output;
+        CFile << setiosflags(std::ios::left) << std::setw(20) << output;
 
         for (int i = p; i < str.length(); i++) CFile << str[i];
         CFile << "\n";

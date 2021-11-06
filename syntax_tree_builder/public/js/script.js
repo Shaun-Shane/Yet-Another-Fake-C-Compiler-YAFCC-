@@ -1,11 +1,11 @@
 const { ipcRenderer } = require('electron');
 class SyntaxTreeNode {
-    constructor(id, fa = -1, x = -1, y = -1, sonXsum = .0, offsetx = 0, symbol = "") {
+    constructor(id, fa = -1, x = -1, y = -1, 
+    /*public sonXsum = .0,*/ offsetx = 0, symbol = "") {
         this.id = id;
         this.fa = fa;
         this.x = x;
         this.y = y;
-        this.sonXsum = sonXsum;
         this.offsetx = offsetx;
         this.symbol = symbol;
     }
@@ -80,22 +80,18 @@ class SyntaxTree {
             let curPos = 0, delta = this.radius * 4;
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
-                node.x = curPos;
-                if (node.fa != -1)
-                    this.nodes[node.fa].sonXsum += node.x;
-                curPos += delta;
+                node.x = curPos, curPos += delta;
             }
         }
         for (let depth = this.atDepth.length - 1; depth >= 0; depth--) {
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
                 if (node.son.length != 0) {
-                    if (node.fa != -1)
-                        this.nodes[node.fa].sonXsum -= node.x;
-                    let delta = node.sonXsum / node.son.length - node.x;
-                    node.x = node.sonXsum / node.son.length; // 坐标设为子节点坐标平均值
-                    if (node.fa != -1)
-                        this.nodes[node.fa].sonXsum += node.x;
+                    let postmp = (Math.round(node.son.length) % 2 == 0) ? (this.nodes[node.son[0]].x
+                        + this.nodes[node.son[node.son.length - 1]].x) / 2 :
+                        this.nodes[node.son[Math.trunc(node.son.length / 2)]].x;
+                    let delta = postmp - node.x;
+                    node.x = postmp; // 子节点偶数个 设为 son[0], son[length - 1] 的中间; 否则为 length / 2 子节点的位置
                     if (delta < 0) { // 节点相比实际位置左移，左移其左侧节点，右边的节点不影响
                         for (let j = 0; j < i; j++) {
                             let nodej = this.nodes[this.atDepth[depth][j]];
@@ -124,11 +120,7 @@ class SyntaxTree {
         let node = this.nodes[x];
         if (node.offsetx == 0)
             return;
-        if (changeFa && node.fa != -1)
-            this.nodes[node.fa].sonXsum -= node.x;
         node.x += node.offsetx;
-        if (changeFa && node.fa != -1)
-            this.nodes[node.fa].sonXsum += node.x;
         for (let i = 0; i < node.son.length; i++) {
             this.nodes[node.son[i]].offsetx += node.offsetx;
             this.pushDown(node.son[i], true);

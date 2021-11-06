@@ -1,9 +1,6 @@
 First(#) = { # }
-First(() = { ( }
-First()) = { ) }
-First(,) = { , }
-First(S) = { ( , ^ , a }
-First(S') = { ( , ^ , a }
-First(T) = { ( , ^ , a }
-First(^) = { ^ }
+First(B) = { a , b }
+First(S) = { a , b }
+First(S') = { a , b }
 First(a) = { a }
+First(b) = { b }

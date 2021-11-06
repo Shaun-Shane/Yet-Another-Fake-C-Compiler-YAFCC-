@@ -1,3 +1,12 @@
+a b
+S A B S'
+S'
+S'->S
+S->B B
+B->a B
+B->b
+#
+
 a ^ ( ) ,
 S T S'
 S'
@@ -9,10 +18,3 @@ T->T , S
 T->S
 #
 
-a b
-S A B S'
-S'
-S'->S
-S->B B
-B->a B
-B->b
