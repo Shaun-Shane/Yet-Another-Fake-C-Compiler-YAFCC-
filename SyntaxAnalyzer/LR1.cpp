@@ -535,14 +535,12 @@ void genLR1Table() {
     std::map<std::string, std::pair<int, int>> temp1;
     std::map<std::string, int> temp2;
 
-    for (auto& str : VT) temp1[str] = {-1, 0}; // * ACTION 表 需要跳过 # 和 @，这两个也算作了终结符
+    for (auto& str : VT) 
+        temp1[str] = {-1, 0};
     for (auto& str : VN) temp2[str] = -1;
-
     for (int i = 0; i < sz; i++) {
         ACTION.push_back(temp1);
         GOTO.push_back(temp2);
-
-        // * 不需要 if else?
         for (auto& item : I[i]) {
             auto& vec = P[item.pId].second;
             int pos = item.dotPos;
@@ -550,9 +548,9 @@ void genLR1Table() {
             if (pos < vec.size() && !vec[pos].first) {
                 std::string tmp_str = VT[vec[pos].second];
                 ACTION[i][tmp_str].first = 1;
+                if(GO.find(std::make_tuple(i, 0, vec[pos].second)) != GO.end())
                 ACTION[i][tmp_str].second =
                     GO[std::make_tuple(i, 0, vec[pos].second)];
-                    // * 注意这可能不存在这个键 要特判
             }
             // condition 2
             else if (pos == vec.size() && P[item.pId].first != S) {
@@ -567,7 +565,6 @@ void genLR1Table() {
             }
         }
     }
-
     for (auto& i : GO) {
         int I, type, idx, J;
         std::tie(I, type, idx) = i.first, J = i.second;
@@ -612,10 +609,15 @@ void checkStr() {
 #ifdef LEX_ANALYZE
     system("start ../LexAnalyzer/LexAnalyse.exe");
 #endif
-    std::string str;
-    inputFile >> str;
-    str += '#';
-
+    std::vector <std::string> str;
+    while(true){
+        std::string tmp;
+        inputFile >> tmp;
+        str.push_back(tmp);
+        if(tmp == "#")
+            break;
+    }
+    
     std::vector<int> status;
     std::vector<std::pair<int, std::string>> sign;
     status.push_back(0);
@@ -625,29 +627,22 @@ void checkStr() {
     bool err = false;  // sign of err
     int p = 0;
     CFile << "\n";
-
     CFile << setiosflags(std::ios::left) << std::setw(20) << "status";
     CFile << setiosflags(std::ios::left) << std::setw(20) << "sign";
     CFile << "input"
           << "\n";
     while (!end) {
         std::string output;
-        for (auto itr : status) output += std::to_string(itr);
+        for (auto itr : status) output += std::to_string(itr) + ' ';
         CFile << setiosflags(std::ios::left) << std::setw(20) << output;
         output.clear();
-
-        for (auto itr : sign) output += itr.second;
+        for (auto itr : sign) output += itr.second + ' ';
         CFile << setiosflags(std::ios::left) << std::setw(20) << output;
-
-        for (int i = p; i < str.length(); i++) CFile << str[i];
+        for (int i = p; i < str.size(); i++) CFile << str[i] << " ";
         CFile << "\n";
-
         int now = status.back();
         std::pair<int, int> act;
-        std::string ch;
-        ch += str[p]; // * 终结符不一定是一个字符 比如 id 这样的 也可以限定符号必须是单一字符
-        act = ACTION[now][ch];
-
+        act = ACTION[now][str[p]];
         if (act.first == -1) {
             end = true;
             err = true;
@@ -662,13 +657,12 @@ void checkStr() {
             end = true;
         } else if (act.first == 1) {
             status.push_back(act.second);
-            sign.push_back({-1, ch});
+            sign.push_back({-1, str[p]});
             ++p;
         } else {
             int Pnum = act.second;
             std::vector<std::pair<bool, int>> vec;
             vec = P[Pnum].second;
-
             int sz = vec.size();
             std::vector<std::pair<int, std::string>> son;
             for (int i = 0; i < sz; i++) {

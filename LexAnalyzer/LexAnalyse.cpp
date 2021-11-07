@@ -2,172 +2,122 @@
 
 using namespace std;
 
-#define MAX_SIZE 102400
-#define MAX_SINGLE 1024
+#define MAX_SIZE 102400	//�������Դ���򳤶� 
+#define MAX_SINGLE 1024	//��󵥴ʳ��� 
 
-char keywords[6][MAX_SINGLE]=
+//�ؼ����б� 
+string keywords[6]=
 {
 	"int","void","if","else","while","return"
 };
 
-enum
-{
-    Num = 128, Fun, Sys, Glo, Loc, Id,
-    Char, Else, Enum, If, Int, Return, Sizeof, While,
-    Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt, Le, Ge, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak, Brace, Pare, Colon, Scolon, Comma,
-    Var, Separator, Keyw, Other
-};
-
+//Դ���򱣴��ַ��� 
 char src[MAX_SIZE];
 
-int Ind=0;
-
+/*
+struct node
+���ã����е���ʶ������ 
+*/ 
 struct node
 {
-	bool isend;
-	int key;
-	int type;
-	char value[MAX_SINGLE];
-	struct node* nxt;
+	bool isend;				//������ʶ 
+	int Ind;				//�����±� 
+	int key;				//���ʱ�� 
+	string type;			//�������� 
+	string value;			//��ǰ���� 
 
+	/*
+	node()
+	���캯����Ϊnode�������ʼ�� 
+	*/
+	node()
+	{
+		Ind=0;
+	} 
+	
+	/*
+	void renew()
+	��ʼ����������ʼ���������ֵ 
+	*/
+	void renew()
+	{
+		isend=0;key=0;
+		value="";
+		type="";
+	}
+	
 	node* next()
 	{
-		int now;//now character
-		isend=0;
-		for(int i=0; i<MAX_SINGLE; i++)
-			value[i]=0;
-		key=0;
-		type=0;
-		nxt=NULL;
+		//��ǰ�ַ� 
+		char now; 
+		renew();
+		
+		//��ǰ����Ϊ�����������ѭ�� 
 		while(!isend)
 		{
 			now=src[Ind++];
-			if (now == '\n'||now=='	')
+			//printf("now=%c\n",now);
+			//��ǰ����Ϊ�ո���߻��л���tab������ 
+			if (now == '\n'||now=='	'||now==' ')
 				continue;
-			else if(now==' ')
-			{
-				if(src[Ind]==' ')
-					Ind++;
-			}
+			
+			//��ǰ����Ϊ���� 
 			else if ((now >= 'a' && now <= 'z') || (now >= 'A' && now <= 'Z') || (now == '_'))// var
 			{
-				int i = 0;
-				value[i]=now;
+				value+=now;
+				//cout<<"?"<<value<<endl;
 				while ((src[Ind] >= 'a' && src[Ind] <= 'z') || (src[Ind] >= 'A' && src[Ind] <= 'Z') || (src[Ind] >= '0' && src[Ind] <= '9') || (src[Ind] == '_'))
 				{
-					value[++i] = src[Ind++];
+					value+= src[Ind++];
+					//printf("1");
 				}
-				value[i+1] = '\0';
-				//check keywords
+				//����Ƿ�Ϊ�ؼ��� 
 				for (int j = 0; j < 6; j++)
 				{
-					if (strcmp(value, keywords[j]) == 0)
+					//���ؼ���ƥ��ɹ���ֵ������ 
+					if (value==keywords[j])
 					{
 						key = j + 1;
-						type=Keyw;
+						type=value;
 						break;
 					}
 				}
-				if(type!=Keyw)
+				//���ؼ���ƥ��ʧ����ֵ������ 
+				if(key==0)
 				{
-					key=39;
-					type=Var;
+					key=7;
+					type="ID";
 				}
 				break;
 			}
-			//number
+			//��ǰ����Ϊ���� 
 			else if (now >= '0' && now <= '9')
 			{
-				int i;
-				value[0]=now;
-				for (i=1; src[Ind] >= '0' && src[Ind] <= '9'; i++)
+				value+=now;
+				for (; src[Ind] >= '0' && src[Ind] <= '9';)
 				{
-					value[i]=src[Ind++];
+					value+=src[Ind++];
 				}
-				key = 40;
-				type = Num;
-				value[i]='\0';
+				key = 8;
+				type= "num";
 				break;
 			}
-			//comments
-			else if (now == '/')
-			{
-				if (src[Ind] == '/')
-				{
-					// skip comments
-					while (src[Ind] != 0 && src[Ind] != '\n')
-						Ind++;
-				}
-				else
-				{
-					// divide operator
-					key=44;
-					type = Div;
-					value[0]=now;
-					break;
-				}
-			}
-			//others
-			else if (now == '+')
-			{
-				// parse '+' and '++'
-				if (src[Ind] == '+')
-				{
-					Ind++;
-					key=45;
-					type = Inc;
-					value[0]=value[1]='+';
-					break;
-				}
-				else
-				{
-					key=41;
-					type = Add;
-					value[0]='+';
-					break;
-				}
-			}
-			else if (now == '-')
-			{
-				// parse '-' and '--'
-				if (src[Ind] == '-')
-				{
-					Ind++;
-					key=46;
-					type = Dec;
-					value[0]=value[1]='-';
-					break;
-				}
-				else
-				{
-					key=42;
-					type = Sub;
-					value[0]='-';
-					break;
-				}
-			}
-			else if (now == '*')
-			{
-				key=43;
-				type = Mul;
-				value[0]='*';
-				break;
-			}
+			//�������
 			else if (now == '=')
 			{
 				// parse '==' and '='
 				if (src[Ind] == '=')
 				{
 					Ind++;
-					type = Eq;
-					value[0]=value[1]='=';
+					value="==";
+					type = value;
 					break;
 				}
 				else
 				{
-					key=47;
-					type = Assign;
-					value[0]='=';
+					key=9;
+					value="=";
+					type = value;
 					break;
 				}
 			}
@@ -177,10 +127,9 @@ struct node
 				if (src[Ind] == '=')
 				{
 					Ind++;
-					key=48;
-					type = Ne;
-					value[0]='!';
-					value[1]='=';
+					key=9;
+					value="!=";
+					type = value;
 					break;
 				}
 			}
@@ -190,25 +139,16 @@ struct node
 				if (src[Ind] == '=')
 				{
 					Ind++;
-					key=49;
-					type = Le;
-					value[0]='<';
-					value[1]='=';
-					break;
-				}
-				else if (src[Ind] == '<')
-				{
-					Ind++;
-					key=50;
-					type = Shl;
-					value[0]=value[1]='<';
+					key=9;
+					value="<=";
+					type = value;
 					break;
 				}
 				else
 				{
-					key=51;
-					type = Lt;
-					value[0]='<';
+					key=9;
+					value="<";
+					type = value;
 					break;
 				}
 			}
@@ -218,204 +158,98 @@ struct node
 				if (src[Ind] == '=')
 				{
 					Ind++;
-					key=52;
-					type = Ge;
-					value[0]='>';
-					value[1]='=';
-					break;
-				}
-				else if (src[Ind] == '>')
-				{
-					Ind++;
-					key=53;
-					type = Shr;
-					value[0]=value[1]='>';
+					key=9;
+					value=">=";
+					type = value;
 					break;
 				}
 				else
 				{
-					key=54;
-					type = Gt;
-					value[0]='>';
+					key=9;
+					value=">";
+					type = value;
 					break;
 				}
 			}
-			else if (now == '|')
-			{
-				// parse '|' or '||'
-				if (src[Ind] == '|')
-				{
-					Ind++;
-					key=55;
-					type = Lor;
-					value[0]=value[1]='|';
-					break;
-				}
-				else
-				{
-					key=56;
-					type = Or;
-					value[0]='|';
-					break;
-				}
-			}
-			else if (now == '&')
-			{
-				// parse '&' and '&&'
-				if (src[Ind] == '&')
-				{
-					Ind++;
-					key=58;
-					type = Lan;
-					value[0]=value[1]='&';
-					break;
-				}
-				else
-				{
-					key=59;
-					type = And;
-					value[0]='&';
-					break;
-				}
-			}
-			else if (now == '^')
-			{
-				key=60;
-				type = Xor;
-				value[0]='^';
-				break;
-			}
-			else if (now == '%')
-			{
-				key=61;
-				type = Mod;
-				value[0]='%';
-				break;
-			}
-			else if (now == '['||now==']')
-			{
-				key=62;
-				type = Brak;
-				value[0]=now;
-				break;
-			}
-			else if (now == '?')
-			{
-				key=63;
-				type = Cond;
-				value[0]='?';
-				break;
-			}
-			else if (now == '{' || now == '}')
-			{
-				key=64;
-				type = Brace;
-				value[0]=now;
-				break;
-			}
-			else if (now == '(' || now == ')')
-			{
-				key=65;
-				type = Pare;
-				value[0]=now;
-				break;
-			}
-			else if (now == ':')
-			{
-				key=66;
-				type = Colon;
-				value[0]=now;
-				break;
-			}
-			else if (now == ';')
-			{
-				key=67;
-				type = Scolon;
-				value[0]=now;
-				break;
-			}
-			else if (now == ',')
-			{
-				key=68;
-				type = Comma;
-				value[0]=now;
-				break;
-			}
-			else if(now == '~' || now == '"' || now =='\\')
-			{
-				key=69;
-				type=Separator;
-				value[0]=now;
-				break;
-			}
+			//��ǰ����Ϊ#��������������� 
 			else if(now=='#')
 			{
 				isend=1;
 				break;
 			}
+			//����ǰ���Ų��������κ�һ�������У��򲻺Ϸ���������Ϸ���Ϣ 
 			else
 			{
-				printf("Error\n");
-				key = 70;
-				type =Other;
-				value[0]=now;
+				key=9;
+				value+=now;
+				type = value;
 				break;
 			}
 		}
-		node *tmpp = new(nothrow)node;
-		tmpp->nxt=NULL;
-		nxt = tmpp;
 		return this;
 	}
-	void procedure(struct node *tmp, FILE *file_out)
+	/*
+	void procedure(struct node *tmp)
+	���ã��ڽ�����־δ�����ǰһֱ���� ��next()���������ڽ�����־����Ǻ�������� 
+	*/ 
+	void procedure(struct node *tmp)
 	{
-		printf("result:\n");
-		tmp=tmp->next();//get next
+		//printf("result:\n");
+		//��ȡ��һ������ 
+		tmp=tmp->next();
 		while (!tmp->isend)
 		{
-			printf("< %d , %s >\n", tmp->key, tmp->value);
-			fprintf(file_out,"< %d , %s >\n", tmp->key, tmp->value);
-			tmp=tmp->nxt;
+			//printf("%d->%d %s->ID\n", tmp->key,tmp->type, tmp->value);
+			//fprintf(file_out,"%s->%s\n", tmp->value, tmp->value);
+			cout<<tmp->type<<endl;
 			tmp=tmp->next();
 		}
-		printf("\n\ndata being writen into output.txt\n\n");
+		//printf("\n\ndata being writen into output.txt\n\n");
 	}
-} head;
+};
 
 
-
+/*
+void init()
+���ã������ļ����ʣ�����node��procedure��������������޲����������ӿ���̨���������ļ���ַ������ļ�Ĭ���������ļ���ͬĿ¼����Ϊoutput.txt 
+*/ 
 void init()
 {
-	int index;
-	FILE *file_in,*file_out;
-	char path[50];
+	//�����ļ��������ͱ��� 
+	FILE *file_in;
+	
 	struct node *head;
-
 	head = new(nothrow)node;
-	head->nxt = NULL;
 
+	//�ļ�·�� 
+	char path[50];
 	printf("path:");
 	scanf("%s", path);
-
+	
+	//�����ļ����쳣 
 	if ((file_in = fopen(path, "r")) == NULL)
 	{
 		printf("could not open(%s)\n", path);
 		exit(-1);
 	}
-	if ((file_out = fopen(".\\output.txt", "w")) == NULL)
-	{
-		printf("could not open(%s)\n", path);
-		exit(-1);
-	}
-	//
+	
+	
+	//�ļ������쳣���� 
+	int index;
 	if ((index = fread(src,1,MAX_SIZE,file_in)) <= 0)
 	{
 		printf("read() returned %d\n", index);
 		exit(-1);
 	}
+	
+	freopen("out.txt","w",stdout);
+	//���дʷ����� 
+	head->procedure(head);
+	delete head; 
+	
+	//�ر��ļ����� 
 	fclose(file_in);
-	head->procedure(head,file_out);
-	fclose(file_out);
+	fclose(stdout);
 }
 
 int main()
