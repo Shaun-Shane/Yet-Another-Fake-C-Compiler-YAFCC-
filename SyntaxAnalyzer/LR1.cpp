@@ -52,20 +52,17 @@ struct Item {
 std::vector<std::set<Item>> I;  // 项目集 I0, I1, I2, ...
 
 void openFile() {
-    grammarFile.open("Grammar.txt");
     CFile.open("CFile.txt");
-    firstSetFile.open("First.txt");
     inputFile.open("Input.txt");
 }
 
 void closeFile() {
-    grammarFile.close();
     CFile.close();
-    firstSetFile.close();
     inputFile.close();
 }
 
 void writeFirst() {  // 输出 first 集和
+    firstSetFile.open("First.txt");
     for (const auto& i : first) {
         firstSetFile << "First(" << i.first << ") = { ";
         for (auto it = i.second.begin(); it != i.second.end();) {
@@ -74,6 +71,7 @@ void writeFirst() {  // 输出 first 集和
         }
         firstSetFile << " }\n";
     }
+    firstSetFile.close();
 }
 
 void writeC() {  // 输出文法的项目集族 C
@@ -87,7 +85,7 @@ void writeC() {  // 输出文法的项目集族 C
                 if (j == item.dotPos) CFile << ".";
                 if (vec[j].first)
                     CFile << VN[vec[j].second];
-                else
+                else if (VT[vec[j].second] != "@")
                     CFile << VT[vec[j].second];
             }
             if (item.dotPos == vec.size()) CFile << ".";
@@ -177,6 +175,7 @@ std::string P_ToString(const std::string& gl,
 
 // 输入文法
 void inputGrammar() {
+    grammarFile.open("Grammar.txt");
     std::stringstream ss;
     std::string line, vt, vn;
     getline(grammarFile, line);  // 读入终结符
@@ -219,9 +218,10 @@ void inputGrammar() {
             std::cerr << "Error grammar input! No '->' sign!: " << line
                       << std::endl;
             closeFile();
+            system("pause");
             exit(0);
         }
-        getline(ss, gr, '-');  // 读入右部
+        getline(ss, gr);  // 读入右部
 
         if (std::find(VN.begin(), VN.end(), gl) ==
             VN.end()) {  // 左部不能含有多余空格
@@ -230,6 +230,7 @@ void inputGrammar() {
             std::cerr << "Error grammar input! Left side VN is invalid: " << gl
                       << std::endl;
             closeFile();
+            system("pause");
             exit(0);
         }
 
@@ -252,6 +253,7 @@ void inputGrammar() {
                     std::cerr << "Error grammar input!: " << line << " "
                               << "\nNo such VT or VN: " << tmp << std::endl;
                     closeFile();
+                    system("pause");
                     exit(0);
                 }
             }
@@ -262,18 +264,21 @@ void inputGrammar() {
             if (stmp == P_ToString(i.first, i.second)) {
                 std::cerr << "Multiple P input!: " << line << std::endl;
                 closeFile();
+                system("pause");
                 exit(0);
             }
         }
         if (!G[S].empty() && gl == S) {  // 判断拓展文法开始符号是否有多个产生式
             std::cerr << "S has more than 1 Production!: " << line << std::endl;
             closeFile();
+            system("pause");
             exit(0);
         }
         P.emplace_back(gl, vec);  // 存储一条产生式，产生式数目 + 1
         G[gl].push_back(P.size() - 1);
     }
     ss.clear();
+    grammarFile.close();
 }
 
 // 求 first 集
@@ -292,8 +297,8 @@ void getFirstSet() {
 
                 if (type == false) {  // X->a...., a in VT
                     std::size_t preSize = first[gl].size();
-                    for (auto& i : first[VT[idx]]) first[gl].insert(i);
                     if (VT[idx] == "@") first[gl].insert(idx);
+                    else for (auto& i : first[VT[idx]]) first[gl].insert(i);
                     if (first[gl].size() != preSize) end = false;
                 } else {  // X->Y..., Y in VN
                     std::size_t preSize = first[gl].size();
@@ -377,7 +382,7 @@ void genClosure(std::set<Item>& Ii) {
             Item newItem;
             auto itr = G.find(VN[idx]);  // 获取 .Bβ 的 B -> 产生式迭代器
 
-            if (itr == G.end()) {
+            if (itr == G.end() || iVT == VT.size() - 1) {
                 std::cerr << "GenClosure error, checkP! line: " << __LINE__
                           << std::endl;
                 return;
@@ -527,13 +532,14 @@ void genLR1Table() {
     std::map<std::string, std::pair<int, int>> temp1;
     std::map<std::string, int> temp2;
 
-    for (auto& str : VT) temp1[str] = {-1, 0};
+    for (auto& str : VT) temp1[str] = {-1, 0}; // * ACTION 表 需要跳过 # 和 @，这两个也算作了终结符
     for (auto& str : VN) temp2[str] = -1;
 
     for (int i = 0; i < sz; i++) {
         ACTION.push_back(temp1);
         GOTO.push_back(temp2);
 
+        // * 不需要 if else?
         for (auto& item : I[i]) {
             auto& vec = P[item.pId].second;
             int pos = item.dotPos;
@@ -543,6 +549,7 @@ void genLR1Table() {
                 ACTION[i][tmp_str].first = 1;
                 ACTION[i][tmp_str].second =
                     GO[std::make_tuple(i, 0, vec[pos].second)];
+                    // * 注意这可能不存在这个键 要特判
             }
             // condition 2
             else if (pos == vec.size() && P[item.pId].first != S) {
@@ -574,10 +581,10 @@ void LR1() {         // LR1分析法 入口
     writeFirst();
 
     genC();  // 生成 LR(1) 项目集族 C
-
-    genLR1Table();  //生成LR(1)分析表
     writeC();
     writeGO();
+
+    genLR1Table();  //生成LR(1)分析表
     writeLR1Table();
 }
 
@@ -635,7 +642,7 @@ void checkStr() {
         int now = status.back();
         std::pair<int, int> act;
         std::string ch;
-        ch += str[p];
+        ch += str[p]; // * 终结符不一定是一个字符 比如 id 这样的 也可以限定符号必须是单一字符
         act = ACTION[now][ch];
 
         if (act.first == -1) {
