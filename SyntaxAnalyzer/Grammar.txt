@@ -1,20 +1,87 @@
-a b
-S A B S'
+; , { } ( ) + - * / = < == > >= <= != int void if else while return ID num
+S' Program State_str State State_type Fun_state Var_state Fun_state Form_par Block Par_list Par Iner_state Sent_str Iner_par_state Sent Sent_if Sent_while Sent_return Sent_eval Exp D Exp_add Exp_addF relop Nape Act_list Call Act Div
 S'
-S'->S
-S->B B
-B->a B
-B->b
-#
 
-a ^ ( ) ,
-S T S'
-S'
-S'->S
-S->a
-S->^
-S->( T )
-T->T , S
-T->S
+S'->Program
+Program->State_str
+
+State_str->State State_str
+State_str->State
+
+State->int ID State_type
+State->void ID Fun_state
+
+State_type->Var_state
+State_type->Fun_state
+
+Var_state->;
+
+Fun_state->( Form_par ) Block
+
+Form_par->Par_list
+Form_par->void
+
+Par_list->Par , Par_list
+Par_list->Par
+
+Par->int ID
+
+Block->{ Iner_state Sent_str }
+Block->{ Sent_str }
+
+Iner_state->Iner_par_state Iner_state
+Iner_state->Iner_par_state
+
+Iner_par_state->int ID ;
+
+Sent_str->Sent Sent_str
+Sent_str->Sent
+
+Sent->Sent_if
+Sent->Sent_while
+Sent->Sent_return
+Sent->Sent_eval
+
+Sent_eval->ID = Exp ;
+
+Sent_return->return D
+D->Exp ;
+D->;
+
+Sent_while->while ( Exp ) Block
+
+Sent_if->if ( Exp ) Block
+Sent_if->if ( Exp ) Block else Block
+
+Exp->Exp_add
+Exp->Exp_add Exp_addF
+Exp_addF->relop Exp_add
+Exp_addF->relop Exp_add Exp_addF
+
+relop->==
+relop->>
+relop->>=
+relop-><=
+relop->!=
+
+Exp_add->Nape
+Exp_add->Nape + Exp_add
+Exp_add->Nape - Exp_add
+
+Nape->Div
+Nape->Div * Nape
+Nape->Div / Nape
+
+Div->num
+Div->( Exp )
+Div->ID Call
+Div->ID
+
+Call->( Act )
+Call->( )
+Act->Act_list
+
+Act_list->Exp , Act_list
+Act_list->Exp
 #
 

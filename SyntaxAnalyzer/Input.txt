@@ -2,3 +2,11 @@ aabab
 
 (((((a,a),^,(a)),a),a),a)
 
+S' Program State_str State ID State_type Fun_state
+Var_state Fun_state Form_par Block
+Par_list Par Iner_state Sent_str Iner_par_sate
+Sent Sent_if Sent_while Sent_return Sent_eval
+Exp Exp_add Exp_addF relop
+Nape Act_list Call Act Div num numr
+alpha digit alphadigit
+

@@ -181,7 +181,7 @@ void inputGrammar() {
     getline(grammarFile, line);  // 读入终结符
     ss.clear(), ss << line;
     while (getline(ss, vt, ' '))
-        if (vt.size()) VT.push_back(vt);
+        if (vt.size() && std::find(VT.begin(), VT.end(), vt) == VT.end()) VT.push_back(vt);
 
     sort(VT.begin(), VT.end());  // 按字典序 可以删除
 
@@ -191,7 +191,7 @@ void inputGrammar() {
     getline(grammarFile, line);  // 读入非终结符
     ss.clear(), ss << line;
     while (getline(ss, vn, ' '))
-        if (vn.size()) VN.push_back(vn);
+        if (vn.size() && std::find(VN.begin(), VN.end(), vn) == VN.end()) VN.push_back(vn);
 
     sort(VN.begin(), VN.end());  // 按字典序 可删除
 
@@ -203,6 +203,7 @@ void inputGrammar() {
     printVN_VT_S();  // for debug
 
     while (getline(grammarFile, line)) {  // 读入产生式
+        if (line.size() == 0) continue;
         if (line == "#") break;
         ss.clear(), ss << line;           // 读入文法
         std::string gl, gr;
@@ -385,6 +386,8 @@ void genClosure(std::set<Item>& Ii) {
             if (itr == G.end() || iVT == VT.size() - 1) {
                 std::cerr << "GenClosure error, checkP! line: " << __LINE__
                           << std::endl;
+                if (itr == G.end()) std::cerr << "itr == G.end()" << std::endl;
+                std::cerr << idx << " " << VN[idx] << std::endl;
                 return;
             }
             for (auto& nxtPId : itr->second) {

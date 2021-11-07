@@ -1,6 +1,55 @@
+First(!=) = { != }
 First(#) = { # }
-First(B) = { a , b }
-First(S) = { a , b }
-First(S') = { a , b }
-First(a) = { a }
-First(b) = { b }
+First(() = { ( }
+First()) = { ) }
+First(*) = { * }
+First(+) = { + }
+First(,) = { , }
+First(-) = { - }
+First(/) = { / }
+First(;) = { ; }
+First(<) = { < }
+First(<=) = { <= }
+First(=) = { = }
+First(==) = { == }
+First(>) = { > }
+First(>=) = { >= }
+First(Act) = { ( , ID , num }
+First(Act_list) = { ( , ID , num }
+First(Block) = { { }
+First(Call) = { ( }
+First(D) = { ( , ; , ID , num }
+First(Div) = { ( , ID , num }
+First(Exp) = { ( , ID , num }
+First(Exp_add) = { ( , ID , num }
+First(Exp_addF) = { != , <= , == , > , >= }
+First(Form_par) = { int , void }
+First(Fun_state) = { ( }
+First(ID) = { ID }
+First(Iner_par_state) = { int }
+First(Iner_state) = { int }
+First(Nape) = { ( , ID , num }
+First(Par) = { int }
+First(Par_list) = { int }
+First(Program) = { int , void }
+First(S') = { int , void }
+First(Sent) = { ID , if , return , while }
+First(Sent_eval) = { ID }
+First(Sent_if) = { if }
+First(Sent_return) = { return }
+First(Sent_str) = { ID , if , return , while }
+First(Sent_while) = { while }
+First(State) = { int , void }
+First(State_str) = { int , void }
+First(State_type) = { ( , ; }
+First(Var_state) = { ; }
+First(else) = { else }
+First(if) = { if }
+First(int) = { int }
+First(num) = { num }
+First(relop) = { != , <= , == , > , >= }
+First(return) = { return }
+First(void) = { void }
+First(while) = { while }
+First({) = { { }
+First(}) = { } }
