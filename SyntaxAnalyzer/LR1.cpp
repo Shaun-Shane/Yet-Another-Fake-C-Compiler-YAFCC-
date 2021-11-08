@@ -369,32 +369,34 @@ std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
 
 // 生成项目集 Ii 的闭包
 void genClosure(std::set<Item>& Ii) {
-    for (auto itr = Ii.begin(); itr != Ii.end(); ++itr) {
-        const auto& item = *itr;
-        const auto& vec = P[item.pId].second;
-        if (item.dotPos == vec.size()) continue;  // 规约状态
-        bool type = vec[item.dotPos].first;
-        int idx = vec[item.dotPos].second;
-        if (type == false) continue;  // VT 终结符跳过
+    while (true) {
+        auto preSize = Ii.size();
+        for (const auto& item : Ii) {
+            const auto& vec = P[item.pId].second;
+            if (item.dotPos == vec.size()) continue;  // 规约状态
+            bool type = vec[item.dotPos].first;
+            int idx = vec[item.dotPos].second;
+            if (type == false) continue;  // VT 终结符跳过
 
-        for (auto& iVT :
-             getFirstVT(vec, item.right,
-                        item.dotPos)) {  // 对于每个 First(βa) 中的终结符
-            Item newItem;
-            auto itr = G.find(VN[idx]);  // 获取 .Bβ 的 B -> 产生式迭代器
+            for (auto& iVT :
+                 getFirstVT(vec, item.right,
+                            item.dotPos)) {  // 对于每个 First(βa) 中的终结符
+                Item newItem;
+                auto itr = G.find(VN[idx]);  // 获取 .Bβ 的 B -> 产生式迭代器
 
-            if (itr == G.end() || iVT == VT.size() - 1) {
-                std::cerr << "GenClosure error, checkP! line: " << __LINE__
-                          << std::endl;
-                if (itr == G.end()) std::cerr << "itr == G.end()" << std::endl;
-                std::cerr << idx << " " << VN[idx] << std::endl;
-                return;
-            }
-            for (auto& nxtPId : itr->second) {
-                newItem.pId = nxtPId, newItem.right = iVT, newItem.dotPos = 0;
-                Ii.insert(newItem);
+                if (itr == G.end() || iVT == VT.size() - 1) {
+                    std::cerr << "GenClosure error, checkP! line: " << __LINE__
+                              << std::endl;
+                    return;
+                }
+                for (auto& nxtPId : itr->second) {
+                    newItem.pId = nxtPId, newItem.right = iVT,
+                    newItem.dotPos = 0;
+                    Ii.insert(newItem);
+                }
             }
         }
+        if (Ii.size() == preSize) break;
     }
 }
 
@@ -546,11 +548,13 @@ void genLR1Table() {
             int pos = item.dotPos;
             // condition 1
             if (pos < vec.size() && !vec[pos].first) {
-                std::string tmp_str = VT[vec[pos].second];
-                ACTION[i][tmp_str].first = 1;
-                if(GO.find(std::make_tuple(i, 0, vec[pos].second)) != GO.end())
-                ACTION[i][tmp_str].second =
+                if(GO.find(std::make_tuple(i, 0, vec[pos].second)) != GO.end()) {
+                    std::string tmp_str = VT[vec[pos].second];
+                    ACTION[i][tmp_str].first = 1;
+                    ACTION[i][tmp_str].second =
                     GO[std::make_tuple(i, 0, vec[pos].second)];
+                }
+                
             }
             // condition 2
             else if (pos == vec.size() && P[item.pId].first != S) {
@@ -627,17 +631,17 @@ void checkStr() {
     bool err = false;  // sign of err
     int p = 0;
     CFile << "\n";
-    CFile << setiosflags(std::ios::left) << std::setw(20) << "status";
-    CFile << setiosflags(std::ios::left) << std::setw(20) << "sign";
+    CFile << setiosflags(std::ios::left) << std::setw(60) << "status";
+    CFile << setiosflags(std::ios::left) << std::setw(60) << "sign";
     CFile << "input"
           << "\n";
     while (!end) {
         std::string output;
         for (auto itr : status) output += std::to_string(itr) + ' ';
-        CFile << setiosflags(std::ios::left) << std::setw(20) << output;
+        CFile << setiosflags(std::ios::left) << std::setw(60) << output;
         output.clear();
         for (auto itr : sign) output += itr.second + ' ';
-        CFile << setiosflags(std::ios::left) << std::setw(20) << output;
+        CFile << setiosflags(std::ios::left) << std::setw(60) << output;
         for (int i = p; i < str.size(); i++) CFile << str[i] << " ";
         CFile << "\n";
         int now = status.back();

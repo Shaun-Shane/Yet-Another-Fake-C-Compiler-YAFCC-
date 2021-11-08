@@ -1,3 +1,203 @@
-0
-
+200
+-1 ; 
+0 Var_state 
+1 State_type -1 ID -1 int 
+-1 ; 
+3 Var_state 
+4 State_type -1 ID -1 int 
+-1 ID -1 int 
+-1 ID -1 int 
+-1 ID -1 int 
+8 Par 
+9 Par_list -1 , 7 Par 
+10 Par_list -1 , 6 Par 
+11 Par_list 
+-1 ; -1 ID -1 int 
+-1 ; -1 ID -1 int 
+14 Iner_par_state 
+15 Iner_state 13 Iner_par_state 
+-1 num 
+17 Div 
+18 Nape 
+19 Exp_add 
+-1 ; 20 Exp -1 = -1 ID 
+21 Sent_eval 
+-1 ID 
+23 Div 
+24 Nape 
+-1 > 
+-1 ID 
+27 Div 
+-1 ID 
+29 Div 
+30 Nape 
+31 Exp_add -1 + 28 Nape 
+32 Exp_add 
+-1 ) 33 Exp -1 ( 
+34 Div 
+35 Nape 
+36 Exp_add 26 relop 
+37 Exp_addF 25 Exp_add 
+-1 ID 
+39 Div 
+-1 ID 
+-1 ID 
+42 Div 
+43 Nape -1 * 41 Div 
+-1 num 
+45 Div 
+46 Nape 
+47 Exp_add -1 + 44 Nape 
+48 Exp_add 
+-1 ) 49 Exp -1 ( 
+50 Div 
+51 Nape 
+52 Exp_add -1 + 40 Nape 
+53 Exp_add 
+-1 ; 54 Exp -1 = -1 ID 
+55 Sent_eval 
+56 Sent 
+-1 } 57 Sent_str -1 { 
+-1 ID 
+59 Div 
+60 Nape 
+61 Exp_add 
+-1 ; 62 Exp -1 = -1 ID 
+63 Sent_eval 
+64 Sent 
+-1 } 65 Sent_str -1 { 
+66 Block -1 else 58 Block -1 ) 38 Exp -1 ( -1 if 
+67 Sent_if 
+-1 ID 
+69 Div 
+70 Nape 
+-1 <= 
+-1 num 
+73 Div 
+74 Nape 
+75 Exp_add 72 relop 
+76 Exp_addF 71 Exp_add 
+-1 ID 
+-1 num 
+79 Div 
+80 Nape -1 * 78 Div 
+81 Nape 
+82 Exp_add 
+-1 ; 83 Exp -1 = -1 ID 
+84 Sent_eval 
+85 Sent 
+-1 } 86 Sent_str -1 { 
+87 Block -1 ) 77 Exp -1 ( -1 while 
+88 Sent_while 
+-1 ID 
+90 Div 
+91 Nape 
+92 Exp_add 
+-1 ; 93 Exp 
+94 D -1 return 
+95 Sent_return 
+96 Sent 
+97 Sent_str 89 Sent 
+98 Sent_str 68 Sent 
+99 Sent_str 22 Sent 
+-1 } 100 Sent_str 16 Iner_state -1 { 
+101 Block -1 ) 12 Form_par -1 ( 
+102 Fun_state 
+103 State_type -1 ID -1 int 
+-1 ID -1 int 
+105 Par 
+106 Par_list 
+-1 ID 
+108 Div 
+-1 num 
+110 Div 
+111 Nape 
+112 Exp_add -1 + 109 Nape 
+113 Exp_add 
+-1 ; 114 Exp -1 = -1 ID 
+115 Sent_eval 
+-1 ID 
+-1 num 
+118 Div 
+119 Nape -1 * 117 Div 
+120 Nape 
+121 Exp_add 
+-1 ; 122 Exp 
+123 D -1 return 
+124 Sent_return 
+125 Sent 
+126 Sent_str 116 Sent 
+-1 } 127 Sent_str -1 { 
+128 Block -1 ) 107 Form_par -1 ( 
+129 Fun_state 
+130 State_type -1 ID -1 int 
+-1 void 
+-1 ; -1 ID -1 int 
+-1 ; -1 ID -1 int 
+-1 ; -1 ID -1 int 
+135 Iner_par_state 
+136 Iner_state 134 Iner_par_state 
+137 Iner_state 133 Iner_par_state 
+-1 num 
+139 Div 
+140 Nape 
+141 Exp_add 
+-1 ; 142 Exp -1 = -1 ID 
+143 Sent_eval 
+-1 num 
+145 Div 
+146 Nape 
+147 Exp_add 
+-1 ; 148 Exp -1 = -1 ID 
+149 Sent_eval 
+-1 num 
+151 Div 
+152 Nape 
+153 Exp_add 
+-1 ; 154 Exp -1 = -1 ID 
+155 Sent_eval 
+-1 ID 
+157 Div 
+158 Nape 
+159 Exp_add 
+-1 ID 
+161 Div 
+162 Nape 
+163 Exp_add 
+-1 ID 
+165 Div 
+166 Nape 
+167 Exp_add 
+168 Exp 
+169 Act_list 
+-1 ) 170 Act -1 ( 
+171 Call -1 ID 
+172 Div 
+173 Nape 
+174 Exp_add 
+175 Exp 
+176 Act_list -1 , 164 Exp 
+177 Act_list -1 , 160 Exp 
+178 Act_list 
+-1 ) 179 Act -1 ( 
+180 Call -1 ID 
+181 Div 
+182 Nape 
+183 Exp_add 
+-1 ; 184 Exp -1 = -1 ID 
+185 Sent_eval 
+186 Sent 
+187 Sent_str 156 Sent 
+188 Sent_str 150 Sent 
+189 Sent_str 144 Sent 
+-1 } 190 Sent_str 138 Iner_state -1 { 
+191 Block -1 ) 132 Form_par -1 ( 
+192 Fun_state -1 ID -1 void 
+193 State 
+194 State_str 131 State 
+195 State_str 104 State 
+196 State_str 5 State 
+197 State_str 2 State 
+198 State_str 
+199 Program 
 S'

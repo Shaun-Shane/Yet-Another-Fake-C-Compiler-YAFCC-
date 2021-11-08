@@ -2,14 +2,14 @@ const { ipcRenderer } = require('electron')
 
 class SyntaxTreeNode { // 语法树节点
     constructor(public id: number, public fa: number = -1, public x: number = -1, public y: number = -1,
-        public offsetx: number = 0, public symbol: string = "") { }
+        public offsetx: number = 0, public symbol: string = "", public sonl: number = 1e9, public sonr = -1e9) { }
     public son: Array<number> // 子节点数组
 };
 
 class SyntaxTree { // 语法树
     nodes : Array<SyntaxTreeNode> ; // 节点数组
     atDepth: Array<Array<number>>; // 深度为 depth
-    radius: number = 30; // 绘制出的节点半径 px
+    radius: number = 35; // 绘制出的节点半径 px
     root: number; // 根节点标号
     
     buildFromFile(data): void { // 读入语法树信息
@@ -96,33 +96,53 @@ class SyntaxTree { // 语法树
                         for (let j = 0; j < i; j++) {
                             let nodej = this.nodes[this.atDepth[depth][j]];
                             nodej.offsetx += delta;
-                            this.pushDown(nodej.id, true); // 下放标记
+                            this.pushDown(nodej.id, nodej.id); // 下放标记
                         }
                     } else if (delta > 0) { // 相比实际位置右移，右移其右侧节点，左边的节点不影响
                         for (let j = i + 1; j < this.atDepth[depth].length; j++) {
                             let nodej = this.nodes[this.atDepth[depth][j]];
                             nodej.offsetx += delta;
-                            this.pushDown(nodej.id, true); // 下放标记
+                            this.pushDown(nodej.id, nodej.id); // 下放标记
                         }
                     }
                 }
             }
+            for (let i = 0; i < this.atDepth[depth].length; i++) {
+                let node = this.nodes[this.atDepth[depth][i]];
+                this.pushDown(node.id, node.id);
+            }
+            if (this.atDepth[depth].length != 0) {
+                let node = this.nodes[this.atDepth[depth][0]];
+                node.offsetx -= node.x;
+                this.pushDown(node.id, node.id);
+            }
+            for (let i = 1; i < this.atDepth[depth].length; i++) {
+                let nodel = this.nodes[this.atDepth[depth][i - 1]];
+                let node = this.nodes[this.atDepth[depth][i]];
+                let shouldBeX = nodel.sonr + node.x - node.sonl + this.radius * 2.5;
+                node.offsetx += shouldBeX - node.x;
+                this.pushDown(node.id, node.id);
+            }
         }
 
-        // 如果有节点 x 坐标过小，对整个语法树进行平移
+        //如果有节点 x 坐标过小，对整个语法树进行平移
         let minPos = 1e9;
-        for (let i = 0; i < this.nodes.length; i++) minPos = Math.min(minPos, this.nodes[i].x);
+        for (let i = 0; i < this.nodes.length; i++) {
+            minPos = Math.min(minPos, this.nodes[i].x);
+            console.log(this.nodes[i].x);
+        }
         if (minPos < this.radius * 2) this.nodes[this.root].offsetx += this.radius * 2 - minPos;
-        this.pushDown(this.root, true);
+        this.pushDown(this.root, this.root);
     }
 
-    pushDown(x: number, changeFa: boolean): void { // 下放 offset 标记，使整颗子树平移
+    pushDown(x: number, root: number): void { // 下放 offset 标记，使整颗子树平移
         let node = this.nodes[x];
-        if (node.offsetx == 0) return;
         node.x += node.offsetx;
+        if (node.id == root) node.sonl = node.x, node.sonr = node.x;
+        else this.nodes[root].sonl = Math.min(this.nodes[root].sonl, node.x), this.nodes[root].sonr = Math.max(this.nodes[root].sonr, node.x);
         for (let i = 0; i < node.son.length; i++) {
             this.nodes[node.son[i]].offsetx += node.offsetx;
-            this.pushDown(node.son[i], true);
+            this.pushDown(node.son[i], root);
         }
         node.offsetx = 0;
     }

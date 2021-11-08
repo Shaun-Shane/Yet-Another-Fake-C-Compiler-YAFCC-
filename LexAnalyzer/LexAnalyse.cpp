@@ -204,6 +204,7 @@ struct node
 			cout<<tmp->type<<endl;
 			tmp=tmp->next();
 		}
+		cout << "#" << endl;
 		//printf("\n\ndata being writen into output.txt\n\n");
 	}
 };
@@ -242,7 +243,7 @@ void init()
 		exit(-1);
 	}
 	
-	freopen("out.txt","w",stdout);
+	freopen("../SyntaxAnalyzer/input.txt","w",stdout);
 	//���дʷ����� 
 	head->procedure(head);
 	delete head; 

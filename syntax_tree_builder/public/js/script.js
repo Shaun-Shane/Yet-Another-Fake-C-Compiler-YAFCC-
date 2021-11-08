@@ -1,63 +1,63 @@
 const { ipcRenderer } = require('electron');
 class SyntaxTreeNode {
-    constructor(id, fa = -1, x = -1, y = -1, 
-    /*public sonXsum = .0,*/ offsetx = 0, symbol = "") {
+    constructor(id, fa = -1, x = -1, y = -1, offsetx = 0, symbol = "", sonl = 1e9, sonr = -1e9) {
         this.id = id;
         this.fa = fa;
         this.x = x;
         this.y = y;
         this.offsetx = offsetx;
         this.symbol = symbol;
+        this.sonl = sonl;
+        this.sonr = sonr;
     }
 }
 ;
 class SyntaxTree {
     constructor() {
-        this.radius = 30;
+        this.radius = 35; // 绘制出的节点半径 px
     }
     buildFromFile(data) {
         let lines = data.split('\n');
-        this.nodes = new Array(lines.length - 2);
+        this.nodes = new Array(lines.length - 2); // 初始化
         for (let i = 0; i < this.nodes.length; i++) {
             this.nodes[i] = new SyntaxTreeNode(i);
-            this.nodes[i].son = new Array();
+            this.nodes[i].son = new Array(); // 初始化
         }
         this.atDepth = new Array();
-        for (let i = 0; i < lines.length; i++) {
-            if (i == 0) {
+        for (let i = 0; i < lines.length; i++) { // 处理语法树信息
+            if (i == 0) { // 获取根节点标号
                 this.root = parseInt(lines[i]);
             }
-            else if (i == lines.length - 1) {
+            else if (i == lines.length - 1) { // 根节点
                 this.nodes[this.root].symbol = lines[i].split(' ')[0];
             }
-            else {
+            else { // 解析子节点 当前节点 id = i - 1
                 let arr = lines[i].split(' ');
                 for (let j = arr.length - 2; j >= 1; j -= 2) {
-                    let symbol = arr[j];
-                    let sonId = parseInt(arr[j - 1]);
+                    let symbol = arr[j]; // 子节点符号
+                    let sonId = parseInt(arr[j - 1]); // 子节点 id
                     if (sonId != -1)
                         this.nodes[i - 1].son.push(sonId), this.nodes[sonId].symbol = symbol;
                     else {
                         this.nodes.length++;
                         this.nodes[this.nodes.length - 1] = new SyntaxTreeNode(this.nodes.length - 1);
-                        this.nodes[this.nodes.length - 1].son = new Array();
+                        this.nodes[this.nodes.length - 1].son = new Array(); // 初始化
                         this.nodes[i - 1].son.push(this.nodes.length - 1);
                         this.nodes[this.nodes.length - 1].symbol = symbol;
                     }
                 }
             }
         }
-        // for (let i = 0; i < this.nodes.length; i++) console.log(this.nodes[i].symbol);
-        this.initD3Arrow();
+        this.initD3Arrow(); // 初始化 d3 箭头
         this.dfs(this.root); // 深搜处理出每一层的节点
         this.setCoordinates(); // 设置坐标
         this.setContainerSize(); // 设置 svg 大小
-        this.drawTree();
+        this.drawTree(); // 绘制语法树
     }
     setContainerSize() {
         const svg = document.querySelector('#sh_circleContainer');
         svg.style.height = `${svg.getBBox().y + this.atDepth.length * this.radius * 4 + this.radius * 4}`; // 设置 svg 容器高度
-        let maxX = 0;
+        let maxX = 0; // 获取最大 x 最表
         for (let i = 0; i < this.nodes.length; i++)
             maxX = Math.max(maxX, this.nodes[i].x + this.radius * 4);
         svg.style.width = `${svg.getBBox().x + maxX}`;
@@ -67,26 +67,26 @@ class SyntaxTree {
         node.y = (depth + 1) * this.radius * 4; // 设置 y 坐标
         if (this.atDepth.length <= depth) {
             this.atDepth.length = depth + 1;
-            this.atDepth[depth] = new Array();
+            this.atDepth[depth] = new Array(); // 动态设置大小
         }
         this.atDepth[depth].push(x); // 同一深度的节点放在一起
-        for (let i = 0; i < node.son.length; i++) {
-            this.nodes[node.son[i]].fa = x;
+        for (let i = 0; i < node.son.length; i++) { // 继续遍历子节点
+            this.nodes[node.son[i]].fa = x; // 设置节点父亲
             this.dfs(node.son[i], depth + 1);
         }
     }
     setCoordinates() {
-        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) {
+        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) { // 预处理每个深度从左到右节点坐标
             let curPos = 0, delta = this.radius * 4;
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
                 node.x = curPos, curPos += delta;
             }
-        }
-        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) {
+        } // 可以保证子树不会交叉
+        for (let depth = this.atDepth.length - 1; depth >= 0; depth--) { // 从深到浅设置节点实际位置
             for (let i = 0; i < this.atDepth[depth].length; i++) {
                 let node = this.nodes[this.atDepth[depth][i]];
-                if (node.son.length != 0) {
+                if (node.son.length != 0) { // 叶子节点跳过
                     let postmp = (Math.round(node.son.length) % 2 == 0) ? (this.nodes[node.son[0]].x
                         + this.nodes[node.son[node.son.length - 1]].x) / 2 :
                         this.nodes[node.son[Math.trunc(node.son.length / 2)]].x;
@@ -96,34 +96,55 @@ class SyntaxTree {
                         for (let j = 0; j < i; j++) {
                             let nodej = this.nodes[this.atDepth[depth][j]];
                             nodej.offsetx += delta;
-                            this.pushDown(nodej.id, true); // 下放标记
+                            this.pushDown(nodej.id, nodej.id); // 下放标记
                         }
                     }
                     else if (delta > 0) { // 相比实际位置右移，右移其右侧节点，左边的节点不影响
                         for (let j = i + 1; j < this.atDepth[depth].length; j++) {
                             let nodej = this.nodes[this.atDepth[depth][j]];
                             nodej.offsetx += delta;
-                            this.pushDown(nodej.id, true); // 下放标记
+                            this.pushDown(nodej.id, nodej.id); // 下放标记
                         }
                     }
                 }
             }
+            for (let i = 0; i < this.atDepth[depth].length; i++) {
+                let node = this.nodes[this.atDepth[depth][i]];
+                this.pushDown(node.id, node.id);
+            }
+            if (this.atDepth[depth].length != 0) {
+                let node = this.nodes[this.atDepth[depth][0]];
+                node.offsetx -= node.x;
+                this.pushDown(node.id, node.id);
+            }
+            for (let i = 1; i < this.atDepth[depth].length; i++) {
+                let nodel = this.nodes[this.atDepth[depth][i - 1]];
+                let node = this.nodes[this.atDepth[depth][i]];
+                let shouldBeX = nodel.sonr + node.x - node.sonl + this.radius * 3;
+                node.offsetx += shouldBeX - node.x;
+                this.pushDown(node.id, node.id);
+            }
         }
+        //如果有节点 x 坐标过小，对整个语法树进行平移
         let minPos = 1e9;
-        for (let i = 0; i < this.nodes.length; i++)
+        for (let i = 0; i < this.nodes.length; i++) {
             minPos = Math.min(minPos, this.nodes[i].x);
+            console.log(this.nodes[i].x);
+        }
         if (minPos < this.radius * 2)
             this.nodes[this.root].offsetx += this.radius * 2 - minPos;
-        this.pushDown(this.root, true);
+        this.pushDown(this.root, this.root);
     }
-    pushDown(x, changeFa) {
+    pushDown(x, root) {
         let node = this.nodes[x];
-        if (node.offsetx == 0)
-            return;
         node.x += node.offsetx;
+        if (node.id == root)
+            node.sonl = node.x, node.sonr = node.x;
+        else
+            this.nodes[root].sonl = Math.min(this.nodes[root].sonl, node.x), this.nodes[root].sonr = Math.max(this.nodes[root].sonr, node.x);
         for (let i = 0; i < node.son.length; i++) {
             this.nodes[node.son[i]].offsetx += node.offsetx;
-            this.pushDown(node.son[i], true);
+            this.pushDown(node.son[i], root);
         }
         node.offsetx = 0;
     }
@@ -179,7 +200,6 @@ class SyntaxTree {
         });
     }
     initD3Arrow() {
-        // arrow
         var svg = d3.select("svg");
         var defs = svg.append("defs");
         var arrowMarker = defs.append("marker")

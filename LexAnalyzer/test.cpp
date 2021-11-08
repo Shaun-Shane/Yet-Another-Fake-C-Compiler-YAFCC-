@@ -33,7 +33,5 @@ void main(void)
 	b=4;
 	c=2;
 	a=program(a,b,demo(c));
-	return;
 }
 #
-
