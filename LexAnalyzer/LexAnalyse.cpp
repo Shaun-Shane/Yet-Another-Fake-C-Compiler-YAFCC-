@@ -214,6 +214,7 @@ struct node
 void init()
 ���ã������ļ����ʣ�����node��procedure��������������޲����������ӿ���̨���������ļ���ַ������ļ�Ĭ���������ļ���ͬĿ¼����Ϊoutput.txt 
 */ 
+char path[50];
 void init()
 {
 	//�����ļ��������ͱ��� 
@@ -223,9 +224,6 @@ void init()
 	head = new(nothrow)node;
 
 	//�ļ�·�� 
-	char path[50];
-	printf("path:");
-	scanf("%s", path);
 	
 	//�����ļ����쳣 
 	if ((file_in = fopen(path, "r")) == NULL)
@@ -253,8 +251,9 @@ void init()
 	fclose(stdout);
 }
 
-int main()
+int main(int argc, char *argv[])
 {
+	strcpy(path, argv[1]);
 	init();
 	return 0;
 }

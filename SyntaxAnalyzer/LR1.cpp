@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <windows.h>
 
 #define LEX_ANALYZE
 #define DISPLAY_SYNTAX_TREE
@@ -19,6 +20,7 @@ std::ofstream firstSetFile;
 std::ofstream CFile;
 std::ofstream GTree;
 
+std::string codePath;
 std::string S;  // 文法起始符号 拓展文法起始符应为 S'
 std::vector<std::string> VT;  // 终结符
 std::vector<std::string> VN;  // 非终结符
@@ -53,7 +55,6 @@ std::vector<std::set<Item>> I;  // 项目集 I0, I1, I2, ...
 
 void openFile() {
     CFile.open("CFile.txt");
-    inputFile.open("Input.txt");
 }
 
 void closeFile() {
@@ -611,8 +612,11 @@ void printGrammarTree() {
 
 void checkStr() {
 #ifdef LEX_ANALYZE
-    system("start ../LexAnalyzer/LexAnalyse.exe");
+    std::string cmd = "start ../LexAnalyzer/LexAnalyse.exe " + codePath;
+    system(cmd.c_str());
+    Sleep(500);
 #endif
+    inputFile.open("Input.txt");
     std::vector <std::string> str;
     while(true){
         std::string tmp;
@@ -686,7 +690,13 @@ void checkStr() {
         CFile << "err\n";
 }
 
-int main() {
+int main(int argc, char *argv[]) {
+    if (argc == 1) {
+        std::cerr << "No code file path!" << std::endl;
+        system("pause");
+        return 0;
+    }
+    codePath = argv[1];
     openFile();
     LR1();
     checkStr();
