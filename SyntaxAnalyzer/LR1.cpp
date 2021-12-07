@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <windows.h>
 
-#define LEX_ANALYZE
+// #define LEX_ANALYZE
 #define DISPLAY_SYNTAX_TREE
 #define debug(x) std::cerr << #x << " = " << x << std::endl
 
@@ -402,6 +402,9 @@ void genClosure(std::set<Item>& Ii) {
                 for (auto& nxtPId : itr->second) {
                     newItem.pId = nxtPId, newItem.right = iVT,
                     newItem.dotPos = 0;
+                    if (P[newItem.pId].second[0].first == false && P[newItem.pId].second[0].second == VT.size() - 1) {
+                        newItem.dotPos = 1;
+                    }
                     Ii.insert(newItem);
                 }
             }
@@ -467,8 +470,7 @@ void genC() {
             GO[{i, 1, idx}] = to;  // GO(I, X) = j; X in VN
         }
 
-        for (int idx = 0; idx < VT.size(); idx++) { // 对于每个终结符 # 除外
-            if (idx == static_cast<int>(VT.size()) - 2) continue;
+        for (int idx = 0; idx < static_cast<int>(VT.size()) - 2; idx++) { // 对于每个终结符 # @除外
             std::set<Item> newI;  // 新的项目集 vector
             for (const auto& item : I[i]) {
                 const auto& vec = P[item.pId].second;
@@ -682,11 +684,18 @@ void checkStr() {
             vec = P[Pnum].second;
             int sz = vec.size();
             std::vector<std::pair<int, std::string>> son;
-            for (int i = 0; i < sz; i++) {
-                status.pop_back();
-                son.push_back(sign.back());
-                sign.pop_back();
+
+            if (vec.size() == 1 && vec[0].first == false && vec[0].second == VT.size() - 1) {
+                // status.pop_back(); // A->@ 归约特殊处理
+                son.push_back({-1, "@"});
+            } else {
+                for (int i = 0; i < sz; i++) {
+                    status.pop_back();
+                    son.push_back(sign.back());
+                    sign.pop_back();
+                }
             }
+            
             GrammerTree.push_back(son);
             sign.push_back({GrammerTree.size() - 1, P[Pnum].first});
             status.push_back(GOTO[status.back()][P[Pnum].first]);

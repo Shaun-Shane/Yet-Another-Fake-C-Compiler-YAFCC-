@@ -31,6 +31,7 @@ CreateFunTable_m->@
 
 VarList->ParamDec , VarList
 VarList->ParamDec
+VarList->void
 VarList->@
 
 ParamDec->VarSpecifier ID
@@ -96,4 +97,20 @@ WhileStmt->while WhileStmt_m1 ( Exp ) WhileStmt_m2 Block
 WhileStmt_m1->@
 WhileStmt_m2->@
 #
+
+id ( ) -
+Expr ExprTail Var VarTail S'
+S'
+
+S'->Expr
+Expr->- Expr
+Expr->( Expr )
+Expr->Var ExprTail
+ExprTail->- Expr
+ExprTail->@
+Var->id VarTail
+VarTail->( Expr )
+VarTail->@
+#
+
 
