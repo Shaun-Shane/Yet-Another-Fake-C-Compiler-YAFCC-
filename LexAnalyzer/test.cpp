@@ -1,5 +1,3 @@
-int a;
-int b;
 int program(int a,int b,int c)
 {
 	int i;

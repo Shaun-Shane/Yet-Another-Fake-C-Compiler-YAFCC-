@@ -1,11 +1,5 @@
 int
 ID
-;
-int
-ID
-;
-int
-ID
 (
 int
 ID

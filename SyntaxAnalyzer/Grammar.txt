@@ -1,87 +1,99 @@
+$ 终结符
+$ ID 为标识符 num 为数字
 ; , { } ( ) + - * / = < == > >= <= != int void if else while return ID num
-S' Program State_str State State_type Fun_state Var_state Fun_state Form_par Block Par_list Par Iner_state Sent_str Iner_par_state Sent Sent_if Sent_while Sent_return Sent_eval Exp D Exp_add Exp_addF relop Nape Act_list Call Act Div
+
+$ 变元
+S' Program ExtDefList ExtDef ExtDef VarSpecifier FunSpecifier FunDec CreateFunTable_m ParamDec VarList ParamDec DefList Def VarSpecifier StmtList Stmt AssignStmt AddSubExp Item Factor CallStmt CallFunCheck Args ReturnStmt Exp Relop IfStmt IfStmt_m1 IfStmt_m2 Block IfNext IfStmt_next WhileStmt WhileStmt_m1 WhileStmt_m2
+
+$ 文法起始符号
 S'
 
+$ 扩展文法产生式
 S'->Program
-Program->State_str
 
-State_str->State State_str
-State_str->State
+$ 整个程序为多个声明串的组合
+Program->ExtDefList
 
-State->int ID State_type
-State->void ID Fun_state
+$ 声明串
+ExtDefList->ExtDef ExtDefList
+ExtDefList->@
 
-State_type->Var_state
-State_type->Fun_state
+ExtDef->VarSpecifier ID ;
+ExtDef->FunSpecifier FunDec Block
 
-Var_state->;
+VarSpecifier->int
 
-Fun_state->( Form_par ) Block
+FunSpecifier->void
+FunSpecifier->int
 
-Form_par->Par_list
-Form_par->void
+FunDec->ID CreateFunTable_m ( VarList )
+CreateFunTable_m->@
 
-Par_list->Par , Par_list
-Par_list->Par
+VarList->ParamDec , VarList
+VarList->ParamDec
+VarList->@
 
-Par->int ID
+ParamDec->VarSpecifier ID
 
-Block->{ Iner_state Sent_str }
-Block->{ Sent_str }
+Block->{ DefList StmtList }
 
-Iner_state->Iner_par_state Iner_state
-Iner_state->Iner_par_state
+DefList->Def DefList
+DefList->@
+Def->VarSpecifier ID ;
 
-Iner_par_state->int ID ;
+StmtList->Stmt StmtList
+StmtList->@
+Stmt->AssignStmt ;
+Stmt->ReturnStmt ;
+Stmt->IfStmt
+Stmt->WhileStmt
+Stmt->CallStmt ;
 
-Sent_str->Sent Sent_str
-Sent_str->Sent
+AssignStmt->ID = Exp
 
-Sent->Sent_if
-Sent->Sent_while
-Sent->Sent_return
-Sent->Sent_eval
+Exp->AddSubExp
+Exp->Exp Relop AddSubExp
 
-Sent_eval->ID = Exp ;
+AddSubExp->Item
+AddSubExp->Item + Item
+AddSubExp->Item - Item
 
-Sent_return->return D
-D->Exp ;
-D->;
+Item->Factor
+Item->Factor * Factor
+Item->Factor / Factor
 
-Sent_while->while ( Exp ) Block
+Factor->num
+Factor->( Exp )
+Factor->ID
+Factor->CallStmt
 
-Sent_if->if ( Exp ) Block
-Sent_if->if ( Exp ) Block else Block
+CallStmt->ID ( CallFunCheck Args )
+CallFunCheck->@
 
-Exp->Exp_add
-Exp->Exp_add Exp_addF
-Exp_addF->relop Exp_add
-Exp_addF->relop Exp_add Exp_addF
+Args->Exp , Args
+Args->Exp
+Args->@
 
-relop->==
-relop->>
-relop->>=
-relop-><=
-relop->!=
+ReturnStmt->return Exp
+ReturnStmt->return
 
-Exp_add->Nape
-Exp_add->Nape + Exp_add
-Exp_add->Nape - Exp_add
+Relop->>
+Relop-><
+Relop->>=
+Relop-><=
+Relop->==
+Relop->!=
 
-Nape->Div
-Nape->Div * Nape
-Nape->Div / Nape
+IfStmt->if IfStmt_m1 ( Exp ) IfStmt_m2 Block IfNext
+IfStmt_m1->@
+IfStmt_m2->@
 
-Div->num
-Div->( Exp )
-Div->ID Call
-Div->ID
+IfNext->@
+IfNext->IfStmt_next else Block
+IfStmt_next->@
 
-Call->( Act )
-Call->( )
-Act->Act_list
-
-Act_list->Exp , Act_list
-Act_list->Exp
+WhileStmt->while WhileStmt_m1 ( Exp ) WhileStmt_m2 Block
+WhileStmt_m1->@
+WhileStmt_m2->@
 #
 

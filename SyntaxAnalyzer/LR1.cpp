@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <cstdlib>
 #include <windows.h>
 
 #define LEX_ANALYZE
@@ -86,8 +87,7 @@ void writeC() {  // 输出文法的项目集族 C
                 if (j == item.dotPos) CFile << ".";
                 if (vec[j].first)
                     CFile << VN[vec[j].second];
-                else if (VT[vec[j].second] != "@")
-                    CFile << VT[vec[j].second];
+                else CFile << VT[vec[j].second];
             }
             if (item.dotPos == vec.size()) CFile << ".";
             CFile << " , " << VT[item.right];
@@ -179,7 +179,10 @@ void inputGrammar() {
     grammarFile.open("Grammar.txt");
     std::stringstream ss;
     std::string line, vt, vn;
-    getline(grammarFile, line);  // 读入终结符
+    while (true) {
+        getline(grammarFile, line);  // 读入终结符
+        if (line.size() && line[0] != '$') break;
+    }
     ss.clear(), ss << line;
     while (getline(ss, vt, ' '))
         if (vt.size() && std::find(VT.begin(), VT.end(), vt) == VT.end()) VT.push_back(vt);
@@ -189,7 +192,10 @@ void inputGrammar() {
     VT.push_back("#");  // # 也做为终结符
     VT.push_back("@");  // epsilon 这里额外将 epsilon 也算作终结符
 
-    getline(grammarFile, line);  // 读入非终结符
+    while (true) {
+        getline(grammarFile, line);  // 读入非终结符
+        if (line.size() && line[0] != '$') break;
+    }
     ss.clear(), ss << line;
     while (getline(ss, vn, ' '))
         if (vn.size() && std::find(VN.begin(), VN.end(), vn) == VN.end()) VN.push_back(vn);
@@ -197,14 +203,17 @@ void inputGrammar() {
     sort(VN.begin(), VN.end());  // 按字典序 可删除
 
     // 读入文法起始符号
-    getline(grammarFile, line);
+    while (true) {
+        getline(grammarFile, line);  // 读入非终结符
+        if (line.size() && line[0] != '$') break;
+    }
     ss.clear(), ss << line;
     getline(ss, S, ' ');
 
     printVN_VT_S();  // for debug
 
     while (getline(grammarFile, line)) {  // 读入产生式
-        if (line.size() == 0) continue;
+        if (line.size() == 0 || line[0] == '$') continue;
         if (line == "#") break;
         ss.clear(), ss << line;           // 读入文法
         std::string gl, gr;
@@ -458,8 +467,8 @@ void genC() {
             GO[{i, 1, idx}] = to;  // GO(I, X) = j; X in VN
         }
 
-        for (int idx = 0; idx < VT.size() - 2;
-             idx++) {             // 对于每个终结符 @ # 除外
+        for (int idx = 0; idx < VT.size(); idx++) { // 对于每个终结符 # 除外
+            if (idx == static_cast<int>(VT.size()) - 2) continue;
             std::set<Item> newI;  // 新的项目集 vector
             for (const auto& item : I[i]) {
                 const auto& vec = P[item.pId].second;
