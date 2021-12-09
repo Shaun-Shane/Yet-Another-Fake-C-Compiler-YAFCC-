@@ -1,134 +1,14 @@
-#include <algorithm>
-#include <fstream>
-#include <iomanip>
-#include <iostream>
-#include <map>
-#include <set>
-#include <sstream>
-#include <string>
-#include <utility>
-#include <vector>
-#include <cstdlib>
-#include <windows.h>
+#include "SyntaxAnalyzer.h"
 
-// #define LEX_ANALYZE
-#define DISPLAY_SYNTAX_TREE
-#define debug(x) std::cerr << #x << " = " << x << std::endl
-
-std::ifstream grammarFile;
-std::ifstream inputFile;
-std::ofstream firstSetFile;
-std::ofstream CFile;
-std::ofstream GTree;
-
-std::string codePath;
-std::string S;  // 文法起始符号 拓展文法起始符应为 S'
-std::vector<std::string> VT;  // 终结符
-std::vector<std::string> VN;  // 非终结符
-
-std::vector<std::pair<std::string, std::vector<std::pair<bool, int>>>>
-    P;  // S -> X1X2X3...
-std::map<std::string, std::vector<std::size_t>>
-    G;  // 产生式 如 Si->branch1 | branch2 ...
-
-std::map<std::string, std::set<int>> first;   // first 集
-std::map<std::tuple<int, int, int>, int> GO;  // GO(I, type, idx) = j;
-
-std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
-// fir == -1:err   0:acc   1:sj   2:rj
-std::vector<std::map<std::string, int>> GOTO;
-std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;
-
-struct Item {
-    // decltype(G.begin()) itrG;
-    std::size_t pId;     // 属于哪一条产生式
-    std::size_t dotPos;  // . 的位置, 0 到 size
-    std::size_t right;   // 右侧终结符下标
-    bool operator<(const Item& other) const {
-        if (pId == other.pId) {
-            if (dotPos == other.dotPos) return right < other.right;
-            return dotPos < other.dotPos;
-        }
-        return pId < other.pId;
+bool Item::operator<(const Item& other) const {
+    if (pId == other.pId) {
+        if (dotPos == other.dotPos) return right < other.right;
+        return dotPos < other.dotPos;
     }
-};
-std::vector<std::set<Item>> I;  // 项目集 I0, I1, I2, ...
-
-void openFile() {
-    CFile.open("CFile.txt");
+    return pId < other.pId;
 }
 
-void closeFile() {
-    CFile.close();
-    inputFile.close();
-}
-
-void writeFirst() {  // 输出 first 集和
-    firstSetFile.open("First.txt");
-    for (const auto& i : first) {
-        firstSetFile << "First(" << i.first << ") = { ";
-        for (auto it = i.second.begin(); it != i.second.end();) {
-            firstSetFile << VT[*it];
-            if ((++it) != i.second.end()) firstSetFile << " , ";
-        }
-        firstSetFile << " }\n";
-    }
-    firstSetFile.close();
-}
-
-void writeC() {  // 输出文法的项目集族 C
-    for (int i = 0; i < I.size(); i++) {
-        CFile << "I" << i << ":\n";
-        for (auto& item : I[i]) {
-            CFile << "[ ";
-            const auto& vec = P[item.pId].second;
-            CFile << P[item.pId].first << "->";
-            for (int j = 0; j < vec.size(); j++) {
-                if (j == item.dotPos) CFile << ".";
-                if (vec[j].first)
-                    CFile << VN[vec[j].second];
-                else CFile << VT[vec[j].second];
-            }
-            if (item.dotPos == vec.size()) CFile << ".";
-            CFile << " , " << VT[item.right];
-            CFile << " ]\n";
-        }
-        CFile << "\n";
-    }
-
-    std::cout << "Write C done!"
-              << "\n";
-}
-
-void writeGO() {
-    for (auto& i : GO) {
-        int I, type, idx, J;
-        std::tie(I, type, idx) = i.first, J = i.second;
-        CFile << "GO(I" << I << ", ";
-        CFile << (type ? VN[idx] : VT[idx]);
-        CFile << ") = " << J << "\n";
-    }
-
-    std::cout << "Write GO done!"
-              << "\n";
-}
-
-void printItem(const Item& item) {  // for debug 输出项目
-    std::cout << "Debug item: ";
-    const auto& vec = P[item.pId].second;
-    std::cout << P[item.pId].first << "->";
-    for (int j = 0; j < vec.size(); j++) {
-        if (j == item.dotPos) std::cout << ".";
-        if (vec[j].first)  // is VN
-            std::cout << VN[vec[j].second];
-        else  // is VT
-            std::cout << VT[vec[j].second];
-    }
-    if (item.dotPos == vec.size()) std::cout << ".";
-    std::cout << "\n";
-}
-
-void printVN_VT_S() {  // for debug 输出变元 终结符
+void LR1::printVN_VT_S() {  // for debug 输出变元 终结符
     std::cout << "VT: ";
     for (auto& i : VT) std::cout << i << " ";
     std::cout << "\n";
@@ -138,7 +18,7 @@ void printVN_VT_S() {  // for debug 输出变元 终结符
     std::cout << "S: " << S << "\n";
 }
 
-void printG() {  // for debug 输出所有产生式
+void LR1::printG() {  // for debug 输出所有产生式
     for (auto& i : G) {
         std::cout << i.first << "->";
         const auto& tmp = i.second;
@@ -154,14 +34,147 @@ void printG() {  // for debug 输出所有产生式
         }
         std::cout << "\n";
     }
-    /* output format   @ means epsilon
-        B->S
-        S->AS|EXPR|b|@
-    */
+    // output format   @ means epsilon
+    // B->S
+    // S->AS|EXPR|b|@
+}
+
+void LR1::writeFirst() {  // 输出 first 集和
+    std::ofstream firstSetFile;
+    firstSetFile.open(codePath + "First.txt");
+    for (const auto& i : first) {
+        firstSetFile << "First(" << i.first << ") = { ";
+        for (auto it = i.second.begin(); it != i.second.end();) {
+            firstSetFile << VT[*it];
+            if ((++it) != i.second.end()) firstSetFile << " , ";
+        }
+        firstSetFile << " }\n";
+    }
+    firstSetFile.close();
+}
+
+void LR1::writeC_GO() {  // 输出文法的项目集族 C
+    std::ofstream clusterFile;
+    clusterFile.open(codePath + "ClusterFile.txt");
+    for (int i = 0; i < I.size(); i++) {
+        clusterFile << "I" << i << ":\n";
+        for (auto& item : I[i]) {
+            clusterFile << "[ ";
+            const auto& vec = P[item.pId].second;
+            clusterFile << P[item.pId].first << "->";
+            for (int j = 0; j < vec.size(); j++) {
+                if (j == item.dotPos) clusterFile << ".";
+                if (vec[j].first)
+                    clusterFile << VN[vec[j].second];
+                else clusterFile << VT[vec[j].second];
+            }
+            if (item.dotPos == vec.size()) clusterFile << ".";
+            clusterFile << " , " << VT[item.right];
+            clusterFile << " ]\n";
+        }
+        clusterFile << "\n";
+    }
+
+    std::cout << "Write C done!"
+              << "\n";
+
+    for (auto& i : GO) {
+        int I, type, idx, J;
+        std::tie(I, type, idx) = i.first, J = i.second;
+        clusterFile << "GO(I" << I << ", ";
+        clusterFile << (type ? VN[idx] : VT[idx]);
+        clusterFile << ") = " << J << "\n";
+    }
+
+    std::cout << "Write GO done!"
+              << "\n";
+}
+
+void LR1::writeLR1Table() { // 输出 LR1 分析表
+    std::ofstream LR1TableFile;
+    LR1TableFile.open(codePath + "LR1Table.txt");
+    LR1TableFile << "LR(1) Table:\n";
+    int sz = I.size();
+    LR1TableFile << "ACTION:\n";
+    for (int i = 0; i < sz; i++) {
+        std::string output;
+        output = "I" + std::to_string(i) + ": ";
+        LR1TableFile << setiosflags(std::ios::left) << std::setw(8) << output;
+        for (auto str : VT) {
+            output.clear();
+            output = str + "->";
+            if (ACTION[i][str].first == -1)
+                output += "err  ";
+            else if (ACTION[i][str].first == 0)
+                output += "acc  ";
+            else if (ACTION[i][str].first == 1)
+                output += "s" + std::to_string(ACTION[i][str].second) + "  ";
+            else if (ACTION[i][str].first == 2)
+                output += "r" + std::to_string(ACTION[i][str].second) + "  ";
+            LR1TableFile << setiosflags(std::ios::left) << std::setw(16) << output;
+        }
+        LR1TableFile << "\n";
+    }
+
+    LR1TableFile << "GOTO:\n";
+    for (int i = 0; i < sz; i++) {
+        std::string output;
+        output = "I" + std::to_string(i) + ": ";
+        LR1TableFile << setiosflags(std::ios::left) << std::setw(8) << output;
+        for (auto& str : VN) {
+            output.clear();
+            output = str + "->";
+            if (GOTO[i][str] == -1)
+                output += "err  ";
+            else
+                output += std::to_string(GOTO[i][str]) + "  ";
+            LR1TableFile << setiosflags(std::ios::left) << std::setw(16) << output;
+        }
+        LR1TableFile << "\n";
+    }
+    std::cout << "Write LR1_Table done!"
+              << "\n";
+}
+
+void LR1::writeSyntaxTree() { // 输出语法树信息
+    std::ofstream SyntaxTreeFile;
+    SyntaxTreeFile.open("../syntax_tree_builder/SyntaxTree.txt");
+    int root = GrammerTree.size() - 1;
+    SyntaxTreeFile << root << "\n";
+    for (const auto& itr : GrammerTree) {
+        for (const auto& son : itr)
+            SyntaxTreeFile << son.first << " " << son.second << " ";
+        SyntaxTreeFile << "\n";
+    }
+
+    SyntaxTreeFile << S;
+    //输出起始子（如果需要）
+    SyntaxTreeFile.close();
+//#ifdef DISPLAY_SYNTAX_TREE
+    system("start ../syntax_tree_builder/build/win-unpacked/syntax_tree.exe");
+//#endif
+}
+//==============================================================================//
+
+LR1::LR1(const std::string& file) {
+    codePath = file;
+    while (!codePath.empty() && codePath.back() != '/') codePath.pop_back();
+
+    readGrammar();  // 输入文法
+    printG();
+
+    getFirstSet();  // 生成 first 集和
+    writeFirst();
+
+    genC();  // 生成 LR(1) 项目集族 C
+    writeC_GO();
+
+    genLR1Table();  //生成LR(1)分析表
+    writeLR1Table();
 }
 
 // 返回产生式对应字符串
-std::string P_ToString(const std::string& gl,
+std::string LR1::P_ToString(const std::string& gl,
                        const std::vector<std::pair<bool, int>>& vec) {
     std::string ret;
     ret += gl + "->";
@@ -174,9 +187,15 @@ std::string P_ToString(const std::string& gl,
     return ret;
 }
 
-// 输入文法
-void inputGrammar() {
-    grammarFile.open("Grammar.txt");
+// 读取文法
+void LR1::readGrammar() {
+    std::ifstream grammarFile;
+    grammarFile.open(codePath + "Grammar.txt");
+    if (!grammarFile.is_open()) {
+        std::cerr << "Open file failed!";
+        system("pause");
+        return;
+    }
     std::stringstream ss;
     std::string line, vt, vn;
     while (true) {
@@ -228,7 +247,7 @@ void inputGrammar() {
         if (ch != '>' || !has_) {  // 判断文法有无->
             std::cerr << "Error grammar input! No '->' sign!: " << line
                       << std::endl;
-            closeFile();
+            grammarFile.close();
             system("pause");
             exit(0);
         }
@@ -240,7 +259,7 @@ void inputGrammar() {
                 if (c == ' ') c = '^';
             std::cerr << "Error grammar input! Left side VN is invalid: " << gl
                       << std::endl;
-            closeFile();
+            grammarFile.close();
             system("pause");
             exit(0);
         }
@@ -263,7 +282,7 @@ void inputGrammar() {
                 } else {  // 既不是终结符也不是变元
                     std::cerr << "Error grammar input!: " << line << " "
                               << "\nNo such VT or VN: " << tmp << std::endl;
-                    closeFile();
+                    grammarFile.close();
                     system("pause");
                     exit(0);
                 }
@@ -274,14 +293,14 @@ void inputGrammar() {
         for (auto& i : P) {  // 判断有无重复产生式
             if (stmp == P_ToString(i.first, i.second)) {
                 std::cerr << "Multiple P input!: " << line << std::endl;
-                closeFile();
+                grammarFile.close();
                 system("pause");
                 exit(0);
             }
         }
         if (!G[S].empty() && gl == S) {  // 判断拓展文法开始符号是否有多个产生式
             std::cerr << "S has more than 1 Production!: " << line << std::endl;
-            closeFile();
+            grammarFile.close();
             system("pause");
             exit(0);
         }
@@ -292,8 +311,8 @@ void inputGrammar() {
     grammarFile.close();
 }
 
-// 求 first 集
-void getFirstSet() {
+// 生成 first 集和
+void LR1::getFirstSet() {
     bool end = false;
     for (int i = 0; i < VT.size(); i++) // 终结符 a 的 first 集为 a，epsilon 除外
         if (VT[i] != "@") first[VT[i]].insert(i);
@@ -348,7 +367,7 @@ void getFirstSet() {
 }
 
 // 获得 first(βa) 的终结符;
-std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
+std::set<int> LR1::getFirstVT(const std::vector<std::pair<bool, int>>& l,
                          std::size_t right, std::size_t dotPos) {
     std::set<int> ret;
     int epsPos = dotPos;
@@ -378,7 +397,7 @@ std::set<int> getFirstVT(const std::vector<std::pair<bool, int>>& l,
 }
 
 // 生成项目集 Ii 的闭包
-void genClosure(std::set<Item>& Ii) {
+void LR1::genClosure(std::set<Item>& Ii) {
     while (true) {
         auto preSize = Ii.size();
         for (const auto& item : Ii) {
@@ -414,7 +433,7 @@ void genClosure(std::set<Item>& Ii) {
 }
 
 // 判断项目集 Itmp 是否存在，返回项目集编号 brute force
-int foundI(const std::set<Item>& Itmp) {
+int LR1::foundI(const std::set<Item>& Itmp) {
     for (int i = 0; i < I.size(); i++) {
         if (I[i].size() == Itmp.size()) {  // 项目集大小相同才有可能相等
             bool same = true;
@@ -436,7 +455,7 @@ int foundI(const std::set<Item>& Itmp) {
 }
 
 // 生成 LR(1) 项目集族 C
-void genC() {
+void LR1::genC() {
     // 初始化 I0: [S'->.S, #]
     std::set<Item> I0;
     I0.insert((Item){G[S][0], (std::size_t)0,
@@ -497,53 +516,8 @@ void genC() {
     }
 }
 
-// pp's work
-void writeLR1Table() {
-    CFile << "\nLR(1) Table:\n";
-    int sz = I.size();
-    CFile << "ACTION:\n";
-    for (int i = 0; i < sz; i++) {
-        std::string output;
-        output = "I" + std::to_string(i) + ": ";
-        CFile << setiosflags(std::ios::left) << std::setw(8) << output;
-        for (auto str : VT) {
-            output.clear();
-            output = str + "->";
-            if (ACTION[i][str].first == -1)
-                output += "err  ";
-            else if (ACTION[i][str].first == 0)
-                output += "acc  ";
-            else if (ACTION[i][str].first == 1)
-                output += "s" + std::to_string(ACTION[i][str].second) + "  ";
-            else if (ACTION[i][str].first == 2)
-                output += "r" + std::to_string(ACTION[i][str].second) + "  ";
-            CFile << setiosflags(std::ios::left) << std::setw(16) << output;
-        }
-        CFile << "\n";
-    }
-
-    CFile << "GOTO:\n";
-    for (int i = 0; i < sz; i++) {
-        std::string output;
-        output = "I" + std::to_string(i) + ": ";
-        CFile << setiosflags(std::ios::left) << std::setw(8) << output;
-        for (auto& str : VN) {
-            output.clear();
-            output = str + "->";
-            if (GOTO[i][str] == -1)
-                output += "err  ";
-            else
-                output += std::to_string(GOTO[i][str]) + "  ";
-            CFile << setiosflags(std::ios::left) << std::setw(16) << output;
-        }
-        CFile << "\n";
-    }
-    std::cout << "Write LR1_Table done!"
-              << "\n";
-}
-
-// pp's work
-void genLR1Table() {
+// 生成LR(1)分析表
+void LR1::genLR1Table() {
     // init
     int sz = I.size();
     std::map<std::string, std::pair<int, int>> temp1;
@@ -589,53 +563,12 @@ void genLR1Table() {
     }
 }
 
-void LR1() {         // LR1分析法 入口
-    inputGrammar();  // 输入文法
-    printG();
+void LR1::parse(const std::vector<TOKEN>& _token_stream) {
+    std::vector<TOKEN> token_stream = _token_stream;
+    token_stream.push_back({"#", "#", 0, 0});
 
-    getFirstSet();  // 生成 first 集和
-    writeFirst();
-
-    genC();  // 生成 LR(1) 项目集族 C
-    writeC();
-    writeGO();
-
-    genLR1Table();  //生成LR(1)分析表
-    writeLR1Table();
-}
-
-void printGrammarTree() {
-    GTree.open("../syntax_tree_builder/SyntaxTree.txt");
-    int root = GrammerTree.size() - 1;
-    GTree << root << "\n";
-    for (const auto& itr : GrammerTree) {
-        for (const auto& son : itr) GTree << son.first << " " << son.second << " ";
-        GTree << "\n";
-    }
-
-    GTree << S;
-    //输出起始子（如果需要）
-    GTree.close();
-#ifdef DISPLAY_SYNTAX_TREE
-    system("start ../syntax_tree_builder/build/win-unpacked/syntax_tree.exe");
-#endif
-}
-
-void checkStr() {
-#ifdef LEX_ANALYZE
-    std::string cmd = "start ../LexAnalyzer/LexAnalyse.exe " + codePath;
-    system(cmd.c_str());
-    Sleep(500);
-#endif
-    inputFile.open("Input.txt");
-    std::vector <std::string> str;
-    while(true){
-        std::string tmp;
-        inputFile >> tmp;
-        str.push_back(tmp);
-        if(tmp == "#")
-            break;
-    }
+    std::ofstream analyzeFile;
+    analyzeFile.open(codePath + "AnalyzeFile.txt");
     
     std::vector<int> status;
     std::vector<std::pair<int, std::string>> sign;
@@ -645,23 +578,23 @@ void checkStr() {
     bool end = false;  // sign of end
     bool err = false;  // sign of err
     int p = 0;
-    CFile << "\n";
-    CFile << setiosflags(std::ios::left) << std::setw(60) << "status";
-    CFile << setiosflags(std::ios::left) << std::setw(60) << "sign";
-    CFile << "input"
+    analyzeFile << "\n";
+    analyzeFile << setiosflags(std::ios::left) << std::setw(60) << "status";
+    analyzeFile << setiosflags(std::ios::left) << std::setw(60) << "sign";
+    analyzeFile << "input"
           << "\n";
     while (!end) {
         std::string output;
         for (auto itr : status) output += std::to_string(itr) + ' ';
-        CFile << setiosflags(std::ios::left) << std::setw(60) << output;
+        analyzeFile << setiosflags(std::ios::left) << std::setw(60) << output;
         output.clear();
         for (auto itr : sign) output += itr.second + ' ';
-        CFile << setiosflags(std::ios::left) << std::setw(60) << output;
-        for (int i = p; i < str.size(); i++) CFile << str[i] << " ";
-        CFile << "\n";
+        analyzeFile << setiosflags(std::ios::left) << std::setw(60) << output;
+        for (int i = p; i < token_stream.size(); i++) analyzeFile << token_stream[i].token << " ";
+        analyzeFile << "\n";
         int now = status.back();
         std::pair<int, int> act;
-        act = ACTION[now][str[p]];
+        act = ACTION[now][token_stream[p].token];
         if (act.first == -1) {
             end = true;
             err = true;
@@ -676,7 +609,7 @@ void checkStr() {
             end = true;
         } else if (act.first == 1) {
             status.push_back(act.second);
-            sign.push_back({-1, str[p]});
+            sign.push_back({-1, token_stream[p].token});
             ++p;
         } else {
             int Pnum = act.second;
@@ -702,23 +635,17 @@ void checkStr() {
         }
     }
     if (!err) {
-        CFile << "acc\n";
-        printGrammarTree();
+        analyzeFile << "acc\n";
+        writeSyntaxTree();
     } else
-        CFile << "err\n";
+        analyzeFile << "err\n";
 }
 
-int main(int argc, char *argv[]) {
-    if (argc == 1) {
-        std::cerr << "No code file path!" << std::endl;
-        system("pause");
-        return 0;
-    }
-    codePath = argv[1];
-    openFile();
-    LR1();
-    checkStr();
-    closeFile();
-    system("pause");
-    return 0;
-}
+
+
+
+
+
+
+
+
