@@ -1,12 +1,5 @@
 #include "SyntaxAnalyzer.h"
-
-bool Item::operator<(const Item& other) const {
-    if (pId == other.pId) {
-        if (dotPos == other.dotPos) return right < other.right;
-        return dotPos < other.dotPos;
-    }
-    return pId < other.pId;
-}
+//============================================================//
 
 void LR1::printVN_VT_S() {  // for debug 输出变元 终结符
     std::cout << "VT: ";
@@ -139,9 +132,9 @@ void LR1::writeLR1Table() { // 输出 LR1 分析表
 void LR1::writeSyntaxTree() { // 输出语法树信息
     std::ofstream SyntaxTreeFile;
     SyntaxTreeFile.open("../syntax_tree_builder/SyntaxTree.txt");
-    int root = GrammerTree.size() - 1;
+    int root = SyntaxTree.size() - 1;
     SyntaxTreeFile << root << "\n";
-    for (const auto& itr : GrammerTree) {
+    for (const auto& itr : SyntaxTree) {
         for (const auto& son : itr)
             SyntaxTreeFile << son.first << " " << son.second << " ";
         SyntaxTreeFile << "\n";
@@ -568,7 +561,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     token_stream.push_back({"#", "#", 0, 0});
 
     std::ofstream analyzeFile;
-    analyzeFile.open(codePath + "AnalyzeFile.txt");
+    analyzeFile.open(codePath + "LR1AnalyzeFile.txt");
     
     std::vector<int> status;
     std::vector<std::pair<int, std::string>> sign;
@@ -605,7 +598,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
                 son.push_back(sign.back());
                 sign.pop_back();
             }
-            GrammerTree.push_back(son);
+            SyntaxTree.push_back(son);
             end = true;
         } else if (act.first == 1) {
             status.push_back(act.second);
@@ -629,8 +622,8 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
                 }
             }
             
-            GrammerTree.push_back(son);
-            sign.push_back({GrammerTree.size() - 1, P[Pnum].first});
+            SyntaxTree.push_back(son);
+            sign.push_back({SyntaxTree.size() - 1, P[Pnum].first});
             status.push_back(GOTO[status.back()][P[Pnum].first]);
         }
     }
@@ -640,12 +633,3 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     } else
         analyzeFile << "err\n";
 }
-
-
-
-
-
-
-
-
-

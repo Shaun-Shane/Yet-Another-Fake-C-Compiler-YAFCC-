@@ -13,15 +13,8 @@
 #include <utility>
 #include <vector>
 
-#include "LexAnalyzer.hpp"
 
-struct Item {
-    // decltype(G.begin()) itrG;
-    std::size_t pId;     // 属于哪一条产生式
-    std::size_t dotPos;  // . 的位置, 0 到 size
-    std::size_t right;   // 右侧终结符下标
-    bool operator<(const Item& other) const;
-};
+#include "LexAnalyzer.hpp"
 
 class LR1 {
    private:
@@ -41,7 +34,7 @@ class LR1 {
     std::vector<std::map<std::string, std::pair<int, int>>> ACTION;
     // fir == -1:err   0:acc   1:sj   2:rj
     std::vector<std::map<std::string, int>> GOTO;
-    std::vector<std::vector<std::pair<int, std::string>>> GrammerTree;
+    std::vector<std::vector<std::pair<int, std::string>>> SyntaxTree;
     std::vector<std::set<Item>> I;  // 项目集 I0, I1, I2, ...
 
     // output functions

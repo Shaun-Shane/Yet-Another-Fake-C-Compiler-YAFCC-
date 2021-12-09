@@ -8,16 +8,7 @@
 #include <iomanip>
 #include <fstream>
 
-//关键字列表
-const std::vector<std::string> keywords = {"int", "void", "if", "else", "while", "return"};
-
-//标识符
-struct TOKEN {
-    std::string token;  // token类型
-    std::string value;  //值
-    int row;       //行
-    int col;       //列
-};
+#include "utils.hpp"
 
 class LexAnalyzer {
    private:
