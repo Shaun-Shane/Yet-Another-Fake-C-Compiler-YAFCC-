@@ -48,8 +48,8 @@ struct Quad {            // 四元式结构体
 
 struct SemanticSymbol {  //语义分析中的符号
     TOKEN info;
-    int table_index;  //符号所在 table 的 index
-    int innerIndex;   //符号在 table 内部的 index
+    int tableOffset;  //符号所在 table 的 offset
+    int offset;   //符号在 table 内部的 index
 };
 
 //标识符信息，即函数、变量、临时变量、常量的具体信息
