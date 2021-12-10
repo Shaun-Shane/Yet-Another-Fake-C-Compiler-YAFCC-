@@ -26,6 +26,8 @@ class SemanticAnalyzer {
 
     //构造函数
     SemanticAnalyzer();
+    //构造函数
+    SemanticAnalyzer(std::vector<std::string>* ptrVT, std::vector<std::string>* ptrVN);
     //将所有的符号信息放入symbol_list
     void Add_symbol_to_list(const SemanticSymbol symbol);
     //分析过程
