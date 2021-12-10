@@ -540,7 +540,7 @@ void LR1::genLR1Table() {
 }
 
 void LR1::parse(const std::vector<TOKEN>& _token_stream) {
-    SemanticAnalyzer semantic_analyzer = SemanticAnalyzer();
+    SemanticAnalyzer semantic_analyzer = SemanticAnalyzer(&VT, &VN);
 
     std::vector<TOKEN> token_stream = _token_stream;
     token_stream.push_back({"#", "#", -1, -1});
@@ -616,7 +616,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
             sign.push_back({SyntaxTree.size() - 1, P[Pnum].first});
             status.push_back(GOTO[status.back()][P[Pnum].first]);
 
-            //semantic_analyzer.Analysis(P[Pnum].first, P[Pnum].second);
+            semantic_analyzer.Analysis(P[Pnum].first, P[Pnum].second);
         }
     }
     if (!err) {
