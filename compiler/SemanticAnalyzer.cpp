@@ -101,6 +101,8 @@ void SemanticAnalyzer::Print_quads(const std::string file_path) {
 
     for (auto& q: quads)
         quad_out << q.index << "(" << q.ope << ", " << q.arg1 << ", " << q.arg2 << ", " << q.result << ")" << std::endl;
+
+    std::cout << "Write Quad done!\n";
 }
 
 // Program->ExtDefList

@@ -540,8 +540,10 @@ void LR1::genLR1Table() {
 }
 
 void LR1::parse(const std::vector<TOKEN>& _token_stream) {
+    SemanticAnalyzer semantic_analyzer = SemanticAnalyzer();
+
     std::vector<TOKEN> token_stream = _token_stream;
-    token_stream.push_back({"#", "#", 0, 0});
+    token_stream.push_back({"#", "#", -1, -1});
 
     std::ofstream analyzeFile;
     analyzeFile.open(codePath + "LR1AnalyzeFile.txt");
@@ -559,6 +561,9 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     analyzeFile << setiosflags(std::ios::left) << std::setw(60) << "sign";
     analyzeFile << "input"
           << "\n";
+
+    semantic_analyzer.Add_symbol_to_list({ {"#", "", -1, -1}, -1, -1 });
+
     while (!end) {
         std::string output;
         for (auto itr : status) output += std::to_string(itr) + ' ';
@@ -586,6 +591,8 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
         } else if (act.first == 1) {
             status.push_back(act.second);
             sign.push_back({-1, token_stream[p].token});
+
+            semantic_analyzer.Add_symbol_to_list({token_stream[p].token , token_stream[p].value , token_stream[p].row , token_stream[p].col ,-1, -1 });
             ++p;
         } else {
             int Pnum = act.second;
@@ -608,6 +615,8 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
             SyntaxTree.push_back(son);
             sign.push_back({SyntaxTree.size() - 1, P[Pnum].first});
             status.push_back(GOTO[status.back()][P[Pnum].first]);
+
+            //semantic_analyzer.Analysis(P[Pnum].first, P[Pnum].second);
         }
     }
     if (!err) {
@@ -617,4 +626,6 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
         analyzeFile << "err\n";
         throw(std::string("fail to pass syntax analyze!"));
     }
+
+    semantic_analyzer.Print_quads("testfiles/Quads.txt");
 }
