@@ -24,6 +24,11 @@ int main(int argc, char *argv[]) {
         if (lex != nullptr) delete lex;
         if (lr1 != nullptr) delete lr1;
         system("pause");
+    } catch (...) {
+        std::cerr << "error occurs" << std::endl;
+        if (lex != nullptr) delete lex;
+        if (lr1 != nullptr) delete lr1;
+        system("pause");
     }
     return 0;
 }
