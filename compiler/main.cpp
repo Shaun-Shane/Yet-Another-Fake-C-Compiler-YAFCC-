@@ -8,13 +8,22 @@ int main(int argc, char *argv[]) {
         std::cin >> codePath;
     } else codePath = argv[1];
 
-    LexAnalyzer* lex = new LexAnalyzer(codePath);
-    LR1* lr1 = new LR1(codePath);
-    lex->writeAnalyzeResult();
-    lr1->parse(lex->get_stream());
+    LexAnalyzer* lex = nullptr;
+    LR1* lr1 = nullptr;
 
-    delete lex;
-    delete lr1;
-    system("pause");
+    try {
+        lex = new LexAnalyzer(codePath);
+        lr1 = new LR1(codePath);
+        lex->writeAnalyzeResult();
+        lr1->parse(lex->get_stream());
+        delete lex;
+        delete lr1;
+        system("pause");
+    } catch (std::string err) {
+        std::cerr << err << std::endl;
+        if (lex != nullptr) delete lex;
+        if (lr1 != nullptr) delete lr1;
+        system("pause");
+    }
     return 0;
 }

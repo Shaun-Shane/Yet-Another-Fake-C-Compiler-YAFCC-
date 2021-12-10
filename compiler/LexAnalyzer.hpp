@@ -35,11 +35,7 @@ class LexAnalyzer {
         std::ifstream in;
         in.open(file);
 
-        if (!in.is_open()) {
-            std::cerr << "Open file failed!";
-            system("pause");
-            return;
-        }
+        if (!in.is_open()) throw(std::string("Open source file failed!"));
 
         char tmp;
         while (in >> std::noskipws >> tmp) src.push_back(tmp);

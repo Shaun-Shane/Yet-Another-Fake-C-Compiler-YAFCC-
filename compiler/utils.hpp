@@ -28,6 +28,7 @@ struct Item {            // LR1 项目
 
 struct Quad {            // 四元式结构体
     int index;           // 四元式标号
+    std::string op;      // 操作符
     std::string arg1;    // 操作数1
     std::string arg2;    // 操作数2
     std::string result;  // 运算结果
@@ -61,13 +62,30 @@ struct Semantic_symbol_table {
     std::vector<IdentifierInfo> table;  //符号表
     std::string tableName;              //表名
 
+    Semantic_symbol_table() = default;
+
     //构造函数
     Semantic_symbol_table(const TableType& _tableType,
-                          const std::string& _tableName);
+                          const std::string& _tableName) {
+        this->tableType = _tableType;
+	    this->tableName = _tableName;
+    }
+
     //寻找一个变量
-    int findSymbol(const std::string& _idName);
+    int findSymbol(const std::string& _idName) {
+        for (int i = 0; i < table.size(); i++)
+            if (table[i].identifierName == _idName) return i;
+        return -1;
+    }
+
     //加入一个变量，返回加入的位置
-    int addSymbol(const IdentifierInfo& _id);
+    int addSymbol(const IdentifierInfo& _id) {
+        if (findSymbol(_id.identifierName) == -1) {
+		    table.push_back(_id);
+		    return table.size() - 1;
+	    }
+	    return -1;
+    }
 };
 
 #endif

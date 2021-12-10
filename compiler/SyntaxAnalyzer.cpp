@@ -184,11 +184,7 @@ std::string LR1::P_ToString(const std::string& gl,
 void LR1::readGrammar() {
     std::ifstream grammarFile;
     grammarFile.open(codePath + "Grammar.txt");
-    if (!grammarFile.is_open()) {
-        std::cerr << "Open file failed!";
-        system("pause");
-        return;
-    }
+    if (!grammarFile.is_open()) throw(std::string("Open grammar file failed!"));
     std::stringstream ss;
     std::string line, vt, vn;
     while (true) {
@@ -238,11 +234,8 @@ void LR1::readGrammar() {
         getline(ss, gl, '-');  // 读入产生式左部
         ss >> ch;
         if (ch != '>' || !has_) {  // 判断文法有无->
-            std::cerr << "Error grammar input! No '->' sign!: " << line
-                      << std::endl;
             grammarFile.close();
-            system("pause");
-            exit(0);
+            throw(std::string("Error grammar input! No '->' sign!: " + line));
         }
         getline(ss, gr);  // 读入右部
 
@@ -250,11 +243,8 @@ void LR1::readGrammar() {
             VN.end()) {  // 左部不能含有多余空格
             for (auto& c : gl)
                 if (c == ' ') c = '^';
-            std::cerr << "Error grammar input! Left side VN is invalid: " << gl
-                      << std::endl;
             grammarFile.close();
-            system("pause");
-            exit(0);
+            throw(std::string("Error grammar input! Left side VN is invalid: " + gl));
         }
 
         ss.clear(), ss << gr;  // 开始处理产生式右部
@@ -273,11 +263,8 @@ void LR1::readGrammar() {
                     vec.emplace_back(false, idx);
                     tmp.clear();
                 } else {  // 既不是终结符也不是变元
-                    std::cerr << "Error grammar input!: " << line << " "
-                              << "\nNo such VT or VN: " << tmp << std::endl;
                     grammarFile.close();
-                    system("pause");
-                    exit(0);
+                    throw(std::string("Error grammar input!: " + line + "\nNo such VT or VN: " + tmp));
                 }
             }
         }
@@ -285,17 +272,13 @@ void LR1::readGrammar() {
         std::cout << stmp << std::endl;
         for (auto& i : P) {  // 判断有无重复产生式
             if (stmp == P_ToString(i.first, i.second)) {
-                std::cerr << "Multiple P input!: " << line << std::endl;
                 grammarFile.close();
-                system("pause");
-                exit(0);
+                throw(std::string("Multiple P input!: " + line));
             }
         }
         if (!G[S].empty() && gl == S) {  // 判断拓展文法开始符号是否有多个产生式
-            std::cerr << "S has more than 1 Production!: " << line << std::endl;
             grammarFile.close();
-            system("pause");
-            exit(0);
+            throw(std::string("S has more than 1 Production!: " + line));
         }
         P.emplace_back(gl, vec);  // 存储一条产生式，产生式数目 + 1
         G[gl].push_back(P.size() - 1);
@@ -630,6 +613,8 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     if (!err) {
         analyzeFile << "acc\n";
         writeSyntaxTree();
-    } else
+    } else {
         analyzeFile << "err\n";
+        throw(std::string("fail to pass syntax analyze!"));
+    }
 }
