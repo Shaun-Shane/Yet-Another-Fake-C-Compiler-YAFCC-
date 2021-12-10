@@ -1,6 +1,18 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 
+#include <algorithm>
+#include <cstdlib>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <map>
+#include <set>
+#include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
+
 //关键字列表
 const std::vector<std::string> keywords = {"int",  "void",  "if",
                                            "else", "while", "return"};
@@ -28,7 +40,7 @@ struct Item {            // LR1 项目
 
 struct Quad {            // 四元式结构体
     int index;           // 四元式标号
-    std::string op;      // 操作符
+    std::string ope;     // 操作类型
     std::string arg1;    // 操作数1
     std::string arg2;    // 操作数2
     std::string result;  // 运算结果
@@ -67,24 +79,25 @@ struct Semantic_symbol_table {
     //构造函数
     Semantic_symbol_table(const TableType& _tableType,
                           const std::string& _tableName) {
-        this->tableType = _tableType;
-	    this->tableName = _tableName;
+        tableType = _tableType;
+        tableName = _tableName;
     }
-
     //寻找一个变量
-    int findSymbol(const std::string& _idName) {
-        for (int i = 0; i < table.size(); i++)
-            if (table[i].identifierName == _idName) return i;
+    int findSymbol(const std::string& id_name) {
+        int sz = table.size();
+        for (int i = 0; i < sz; i++) {
+            if (table[i].identifierName == id_name)
+                return i;
+        }
         return -1;
     }
-
     //加入一个变量，返回加入的位置
-    int addSymbol(const IdentifierInfo& _id) {
-        if (findSymbol(_id.identifierName) == -1) {
-		    table.push_back(_id);
-		    return table.size() - 1;
-	    }
-	    return -1;
+    int addSymbol(const IdentifierInfo& id) {
+        if (findSymbol(id.identifierName) == -1) {
+            table.push_back(id);
+            return table.size() - 1;
+        }
+        return -1;
     }
 };
 
