@@ -1,3 +1,1 @@
 g++ -o compile.exe main.cpp SyntaxAnalyzer.cpp SemanticAnalyzer.cpp -std=c++11 -DNDEBUG -O4 -static-libgcc -static-libstdc++ -Wl,-Bstatic -lstdc++ -lpthread -Wl,-Bdynamic
-
-start compile.exe testfiles/test.cpp

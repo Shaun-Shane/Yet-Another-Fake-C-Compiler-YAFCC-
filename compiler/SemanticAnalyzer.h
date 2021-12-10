@@ -5,7 +5,6 @@
 #include <vector>
 #include <utility>
 
-#include "LexAnalyzer.hpp"
 #include "utils.hpp"
 
 //语义分析
@@ -19,7 +18,7 @@ class SemanticAnalyzer {
     int mainIndex;                      // main函数对应的四元式标号
     int backpatching_level;              // 回填层次
     std::vector<int> backpatching_list;  // 回填列表
-    int next_quaternary_index;           // 下一个四元式标号
+    int next_quads_index;           // 下一个四元式标号
     int tmp_var_count;                   // 临时变量计数
     std::vector<SemanticSymbol> symbolList;    // 语义分析过程的符号流
     std::vector<Semantic_symbol_table> tables;  // 程序所有符号表
@@ -32,7 +31,7 @@ class SemanticAnalyzer {
     //分析过程
     void Analysis(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
     //打印四元式表
-    void Print_quaternary(const std::string file_path);
+    void Print_quads(const std::string file_path);
 
    private:
     void analyzeProgram(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Program->ExtDefList 

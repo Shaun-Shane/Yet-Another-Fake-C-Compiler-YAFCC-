@@ -15,6 +15,7 @@
 
 
 #include "LexAnalyzer.hpp"
+#include "SemanticAnalyzer.h"
 
 class LR1 {
    private:

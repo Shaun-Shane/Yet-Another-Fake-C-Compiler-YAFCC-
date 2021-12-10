@@ -1,0 +1,1 @@
+start compile.exe testfiles/test.cpp

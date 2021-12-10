@@ -31,6 +31,7 @@ class LexAnalyzer {
         Ind = 0;
         row = 1;
         col = 1;
+        isend = false;
         // 通过 ifstream 读入
         std::ifstream in;
         in.open(file);
