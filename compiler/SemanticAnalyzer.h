@@ -22,8 +22,8 @@ class SemanticAnalyzer {
     int nextQuadsId;           // 下一个四元式标号
     int tmpVarCount;                   // 临时变量计数
     std::vector<SemanticSymbol> symbolList;    // 语义分析过程的符号流
-    std::vector<SemanticSymbolTable> tables;  // 程序所有符号表
-    std::vector<int> currentTableStack;  //当前作用域对应的符号表索引栈
+    std::vector<SymTable> tables;  // 程序所有符号表
+    std::vector<int> currentTableStack;  // 当前作用域对应的符号表索引栈
 
     // 构造函数
     SemanticAnalyzer();

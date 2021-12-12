@@ -4,11 +4,11 @@ SemanticAnalyzer::SemanticAnalyzer() = default;
 
 SemanticAnalyzer::SemanticAnalyzer(std::vector<std::string>* _ptrVT, std::vector<std::string>* _ptrVN) {
     //创建全局的符号表
-    tables.push_back(SemanticSymbolTable(SemanticSymbolTable::GlobalTable, "global table"));
+    tables.push_back(SymTable(SymTable::GlobalTable, "global table"));
     //当前作用域为全局作用域
     currentTableStack.push_back(0);
     //创建临时变量表
-    tables.push_back(SemanticSymbolTable(SemanticSymbolTable::TempTable, "temp variable table"));
+    tables.push_back(SymTable(SymTable::TempTable, "temp variable table"));
 
     //从标号1开始生成四元式标号；0号用于 (j, -, -, main_address)
     nextQuadsId = 1;
@@ -134,10 +134,10 @@ void SemanticAnalyzer::analyzeExtDef(
             symbolList[static_cast<int>(symbolList.size()) - 2]; // ID
 
         // 获取当前层符号表
-        SemanticSymbolTable curTable =
+        SymTable curTable =
             tables[currentTableStack.back()];
         // 判断变量是否重复定义
-        if (curTable.findSymbol(identifier.info.value) != -1) {
+        if (curTable.findSym(identifier.info.value) != -1) {
             std::string err =
                 "Semantic Analyze failed! Multiple definination on row" +
                 std::to_string(identifier.info.row) + "col " +
@@ -151,7 +151,7 @@ void SemanticAnalyzer::analyzeExtDef(
         variable.identifierType = Identifier::Variable;
         variable.specifierType = specifier.info.value;
 
-        tables[currentTableStack.back()].addSymbol(variable);
+        tables[currentTableStack.back()].addSym(variable);
 
         // update symbollist
         for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
@@ -196,7 +196,7 @@ void SemanticAnalyzer::analyzeCreateFunTable_m(
     SemanticSymbol specifier = symbolList[static_cast<int>(symbolList.size()) - 2]; // 函数名
 
     // 在全局的table判断函数名是否重定义
-    if (tables[0].findSymbol(identifier.info.value) != -1) {
+    if (tables[0].findSym(identifier.info.value) != -1) {
         std::string err =
             "Semantic analyze failed! Multiple definition on row " +
             std::to_string(identifier.info.row) + " col " +
@@ -206,9 +206,9 @@ void SemanticAnalyzer::analyzeCreateFunTable_m(
 
     // 新建函数表
     currentTableStack.push_back(tables.size());
-    tables.push_back(SemanticSymbolTable(SemanticSymbolTable::FunctionTable, identifier.info.value));
+    tables.push_back(SymTable(SymTable::FunctionTable, identifier.info.value));
     // 在全局符号表创建当前函数的符号项 (参数个数和入口地址会进行回填)
-    tables[0].addSymbol({Identifier::Function, specifier.info.value,
+    tables[0].addSym({Identifier::Function, specifier.info.value,
                          identifier.info.value} /*0, 0, static_cast<int>(tables.size()) - 1}*/);
     // 返回值
     Identifier return_value;
@@ -221,7 +221,7 @@ void SemanticAnalyzer::analyzeCreateFunTable_m(
     
     // 加入四元式
     quads.push_back({nextQuadsId++, identifier.info.value, "-", "-", "-"});
-    tables[currentTableStack.back()].addSymbol(return_value);
+    tables[currentTableStack.back()].addSym(return_value);
     symbolList.push_back({gl, identifier.info.value, identifier.info.row,
                           identifier.info.col, 0, static_cast<int>(tables[0].table.size()) - 1});
 }
@@ -231,10 +231,10 @@ void SemanticAnalyzer::analyzeParamDec(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     SemanticSymbol identifier = symbolList.back(); // 变量名
     SemanticSymbol specifier = symbolList[static_cast<int>(symbolList.size()) - 2]; // 变量类型
-    SemanticSymbolTable& function_table = tables[currentTableStack.back()]; // 获得当前函数表
+    SymTable& function_table = tables[currentTableStack.back()]; // 获得当前函数表
 
     // 参数重复定义
-    if (function_table.findSymbol(identifier.info.value) != -1) {
+    if (function_table.findSym(identifier.info.value) != -1) {
         std::string err =
             "Semantic analyze failed! Multiple param definition on row " +
             std::to_string(identifier.info.row) + " col " +
@@ -243,9 +243,9 @@ void SemanticAnalyzer::analyzeParamDec(
     }
     
     // 加入形参变量
-    int new_position = function_table.addSymbol({Identifier::Variable, specifier.info.value, identifier.info.value}/*, -1, -1, -1}*/);
+    int new_position = function_table.addSym({Identifier::Variable, specifier.info.value, identifier.info.value}/*, -1, -1, -1}*/);
     // 获取当前函数在全局符号表的 index 形参个数 + 1
-    tables[0].table[tables[0].findSymbol(function_table.tableName)].functionParameterCount++;
+    tables[0].table[tables[0].findSym(function_table.tableName)].functionParameterCount++;
 
     quads.push_back({nextQuadsId ++, "defpar", "-" , "-", identifier.info.value });
 
@@ -264,10 +264,10 @@ void SemanticAnalyzer::analyzeBlock(
 void SemanticAnalyzer::analyzeDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     SemanticSymbol identifier = symbolList[static_cast<int>(symbolList.size()) - 2]; // ID
     SemanticSymbol specifier = symbolList[static_cast<int>(symbolList.size()) - 3]; // VarSpecifier
-    SemanticSymbolTable& curTable = tables[currentTableStack.back()];
+    SymTable& curTable = tables[currentTableStack.back()];
 
     // 重复定义
-    if (curTable.findSymbol(identifier.info.value) != -1) {
+    if (curTable.findSym(identifier.info.value) != -1) {
         std::string err =
             "Semantic analyze failed! Multiple variable definition on row " +
             std::to_string(identifier.info.row) + " col " +
@@ -275,7 +275,7 @@ void SemanticAnalyzer::analyzeDef(const std::string& gl, const std::vector<std::
         throw(err);
     }
 
-    curTable.addSymbol({Identifier::Variable, specifier.info.value, identifier.info.value}/*, -1, -1, -1}*/);
+    curTable.addSym({Identifier::Variable, specifier.info.value, identifier.info.value}/*, -1, -1, -1}*/);
 
     for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
     symbolList.push_back({gl, identifier.info.value, identifier.info.row, identifier.info.col,
@@ -295,7 +295,7 @@ void SemanticAnalyzer::analyzeAssignStmt(
     // 从当前层开始向低层遍历
     for (int scope = static_cast<int>(currentTableStack.size()) - 1; scope >= 0; scope--) {
         auto curTable = tables[currentTableStack[scope]];
-        if ((index = curTable.findSymbol(identifier.info.value)) != -1) {
+        if ((index = curTable.findSym(identifier.info.value)) != -1) {
             existed = true;
             tableOffset = currentTableStack[scope];
             break;
@@ -350,7 +350,7 @@ void SemanticAnalyzer::analyzeExp(
             "std::string& gl, const std::vector<std::pair<bool, int>>& gr)"));
 }
 
-//AddSubExp->Item | Item + Item | Item - Item
+// AddSubExp->Item | Item + Item | Item - Item
 void SemanticAnalyzer::analyzeAddSubExp(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     if (gr.size() == 1) { // AddSubExp->item
@@ -413,7 +413,7 @@ void SemanticAnalyzer::analyzeFactor(
             for (int scope = currentTableStack.size() - 1;
                  scope >= 0; scope--) {
                 auto curTable = tables[currentTableStack[scope]];
-                if (curTable.findSymbol(exp.info.value) != -1) {
+                if (curTable.findSym(exp.info.value) != -1) {
                     existed = true;
                     break;
                 }
@@ -446,13 +446,13 @@ void SemanticAnalyzer::analyzeFactor(
 void SemanticAnalyzer::analyzeCallStmt(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     SemanticSymbol identifier = symbolList[static_cast<int>(symbolList.size()) - 5]; // ID
-    SemanticSymbol check = symbolList[static_cast<int>(symbolList.size()) - 3]; // CallFunCheck
+    SemanticSymbol callFuncCheck = symbolList[static_cast<int>(symbolList.size()) - 3]; // CallFunCheck
     SemanticSymbol args = symbolList[static_cast<int>(symbolList.size()) - 2]; // Args
 
     //检查函数是否定义（在CallFunCheck时已经检查）
 
     // 检查参数个数
-    int para_num = tables[check.tableOffset].table[check.offset].functionParameterCount;
+    int para_num = tables[callFuncCheck.tableOffset].table[callFuncCheck.offset].functionParameterCount;
     if (para_num > stoi(args.info.value)) { // 参数过多
         std::string err =
             "Semantic analyze failed! Too many parameter in function call on row " +
@@ -482,7 +482,7 @@ void SemanticAnalyzer::analyzeCallFunCheck(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     SemanticSymbol fun_id = symbolList[static_cast<int>(symbolList.size()) - 2];
 
-    int fun_id_pos = tables[0].findSymbol(fun_id.info.value);
+    int fun_id_pos = tables[0].findSym(fun_id.info.value);
 
     if (-1 == fun_id_pos) { // 调用未定义
         std::string err =
@@ -531,18 +531,18 @@ void SemanticAnalyzer::analyzeReturnStmt(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     if (gr.size() == 2){ // ReturnStmt->return Exp
         SemanticSymbol return_exp = symbolList.back();
-        SemanticSymbolTable function_table = tables[currentTableStack.back()];
+        SymTable function_table = tables[currentTableStack.back()];
 
         quads.push_back({nextQuadsId ++, "=", return_exp.info.value, "-", function_table.table[0].identifierName});
         quads.push_back({nextQuadsId ++, "return", function_table.table[0].identifierName, "-", function_table.tableName });
 
         for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
-        symbolList.push_back({ gl, return_exp.info.value, -1, -1, -1, -1});
+        symbolList.push_back({gl, return_exp.info.value, -1, -1, -1, -1});
     } else if (gr.size() == 1) { // ReturnStmt->return
-        SemanticSymbolTable function_table = tables[currentTableStack.back()];
+        SymTable function_table = tables[currentTableStack.back()];
 
         // 检查函数的返回值是否为 void
-        if (tables[0].table[tables[0].findSymbol(function_table.tableName)].specifierType != "void") {
+        if (tables[0].table[tables[0].findSym(function_table.tableName)].specifierType != "void") {
             std::string err =
                 "Semantic analyze failed! No return value on "
                 "row " + std::to_string(symbolList.back().info.row) + " col " +
@@ -551,7 +551,7 @@ void SemanticAnalyzer::analyzeReturnStmt(
         }
         quads.push_back({ nextQuadsId++ ,"return","-","-",function_table.tableName });
         for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
-        symbolList.push_back({ gl, "", -1, -1, -1, -1 });
+        symbolList.push_back({gl, "", -1, -1, -1, -1});
     } else 
         throw(std::string(
             "Semantic analyze failed! In SemanticAnalyzer::analyzeReturnStmt(const "
@@ -563,7 +563,7 @@ void SemanticAnalyzer::analyzeRelop(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     SemanticSymbol op = symbolList.back();
     for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
-    symbolList.push_back({ gl, op.info.value ,-1,-1,-1,-1 });
+    symbolList.push_back({gl, op.info.value, -1, -1, -1, -1});
 }
 
 //IfStmt->if IfStmt_m1 ( Exp ) IfStmt_m2 Block IfNext
@@ -603,7 +603,7 @@ void SemanticAnalyzer::analyzeIfStmt(
 void SemanticAnalyzer::analyzeIfStmt_m1(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     backpatchLevel++;
-    symbolList.push_back({ gl, std::to_string(nextQuadsId), -1, -1, -1, -1 });
+    symbolList.push_back({gl, std::to_string(nextQuadsId), -1, -1, -1, -1});
 }
 
 // IfStmt_m2->@
@@ -612,14 +612,14 @@ void SemanticAnalyzer::analyzeIfStmt_m2(
     SemanticSymbol if_exp = symbolList[static_cast<int>(symbolList.size()) - 2];
 
     // 待回填四元式 : 假出口
-    quads.push_back({ nextQuadsId++,"j=",if_exp.info.value,"0","" });
-    backpatchList.push_back(quads.size() - 1);
+    quads.push_back({nextQuadsId++, "j=", if_exp.info.value, "0", ""});
+    backpatchList.push_back(static_cast<int>(quads.size()) - 1);
 
     // 待回填四元式 : 真出口
-    quads.push_back({ nextQuadsId++,"j=","-","-","" });
-    backpatchList.push_back(quads.size() - 1);
+    quads.push_back({nextQuadsId++, "j=", "-", "-", ""});
+    backpatchList.push_back(static_cast<int>(quads.size()) - 1);
 
-    symbolList.push_back({ gl, std::to_string(nextQuadsId),-1,-1,-1,-1 });
+    symbolList.push_back({gl, std::to_string(nextQuadsId), -1, -1, -1, -1});
 }
 
 // IfNext->IfStmt_next else Block
@@ -629,7 +629,7 @@ void SemanticAnalyzer::analyzeIfNext(
 
     for (int i = 0; i < gr.size(); i++) symbolList.pop_back();
 
-    symbolList.push_back({ gl,if_stmt_next.info.value,-1,-1,-1,-1 });
+    symbolList.push_back({gl, if_stmt_next.info.value, -1, -1, -1, -1});
 }
 
 // IfStmt_next ::= @
@@ -637,7 +637,7 @@ void SemanticAnalyzer::analyzeIfStmt_next(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     // if 的跳出语句(else 之前)(待回填)
     quads.push_back({nextQuadsId++, "j", "-", "-", ""});
-    backpatchList.push_back(quads.size() - 1);
+    backpatchList.push_back(static_cast<int>(quads.size()) - 1);
     symbolList.push_back({gl, std::to_string(nextQuadsId), -1, -1, -1, -1});
 }
 
@@ -670,7 +670,7 @@ void SemanticAnalyzer::analyzeWhileStmt(
 void SemanticAnalyzer::analyzeWhileStmt_m1(
     const std::string& gl, const std::vector<std::pair<bool, int>>& gr) {
     backpatchLevel++;
-    symbolList.push_back({ gl, std::to_string(nextQuadsId),-1,-1,-1,-1 });
+    symbolList.push_back({gl, std::to_string(nextQuadsId), -1, -1, -1, -1});
 }
 
 // WhileStmt_m2->@
@@ -680,10 +680,10 @@ void SemanticAnalyzer::analyzeWhileStmt_m2(
 
     // 假出口
     quads.push_back({nextQuadsId++, "j=", while_exp.info.value, "0", ""});
-    backpatchList.push_back(quads.size() - 1);
+    backpatchList.push_back(static_cast<int>(quads.size()) - 1);
     // 真出口
     quads.push_back({nextQuadsId++, "j", "-", "-", ""});
-    backpatchList.push_back(quads.size() - 1);
+    backpatchList.push_back(static_cast<int>(quads.size()) - 1);
 
     symbolList.push_back(
         {gl, std::to_string(nextQuadsId), -1, -1, -1, -1});
