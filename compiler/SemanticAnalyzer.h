@@ -37,6 +37,7 @@ class SemanticAnalyzer {
     void printQuads(const std::string& dirname);
 
    private:
+    void popSymbol(int grCount); // 从 symbollist 删除若干符号
     void analyzeProgram(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Program->ExtDefList 
     void analyzeExtDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); //ExtDef->VarSpecifier ID ; | FunSpecifier FunDec Block ExitFunTable_m
     void analyzeVarSpecifier(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // VarSpecifier->int
