@@ -34,7 +34,7 @@ void LR1::printG() {  // for debug 输出所有产生式
 
 void LR1::writeFirst() {  // 输出 first 集和
     std::ofstream firstSetFile;
-    firstSetFile.open(codePath + "First.txt");
+    firstSetFile.open(dirname + "First.txt");
     for (const auto& i : first) {
         firstSetFile << "First(" << i.first << ") = { ";
         for (auto it = i.second.begin(); it != i.second.end();) {
@@ -48,7 +48,7 @@ void LR1::writeFirst() {  // 输出 first 集和
 
 void LR1::writeC_GO() {  // 输出文法的项目集族 C
     std::ofstream clusterFile;
-    clusterFile.open(codePath + "ClusterFile.txt");
+    clusterFile.open(dirname + "ClusterFile.txt");
     for (int i = 0; i < I.size(); i++) {
         clusterFile << "I" << i << ":\n";
         for (auto& item : I[i]) {
@@ -85,7 +85,7 @@ void LR1::writeC_GO() {  // 输出文法的项目集族 C
 
 void LR1::writeLR1Table() { // 输出 LR1 分析表
     std::ofstream LR1TableFile;
-    LR1TableFile.open(codePath + "LR1Table.txt");
+    LR1TableFile.open(dirname + "LR1Table.txt");
     LR1TableFile << "LR(1) Table:\n";
     int sz = I.size();
     LR1TableFile << "ACTION:\n";
@@ -149,9 +149,11 @@ void LR1::writeSyntaxTree() { // 输出语法树信息
 }
 //==============================================================================//
 
+LR1::LR1() = default;
+
 LR1::LR1(const std::string& file) {
-    codePath = file;
-    while (!codePath.empty() && codePath.back() != '/') codePath.pop_back();
+    dirname = file;
+    while (!dirname.empty() && dirname.back() != '/') dirname.pop_back();
 
     readGrammar();  // 输入文法
     printG();
@@ -183,7 +185,7 @@ std::string LR1::P_ToString(const std::string& gl,
 // 读取文法
 void LR1::readGrammar() {
     std::ifstream grammarFile;
-    grammarFile.open(codePath + "Grammar.txt");
+    grammarFile.open(dirname + "Grammar.txt");
     if (!grammarFile.is_open()) throw(std::string("Open grammar file failed!"));
     std::stringstream ss;
     std::string line, vt, vn;
@@ -546,7 +548,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     token_stream.push_back({"#", "#", -1, -1});
 
     std::ofstream analyzeFile;
-    analyzeFile.open(codePath + "LR1AnalyzeFile.txt");
+    analyzeFile.open(dirname + "LR1AnalyzeFile.txt");
     
     std::vector<int> status;
     std::vector<std::pair<int, std::string>> sign;
@@ -562,7 +564,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
     analyzeFile << "input"
           << "\n";
 
-    semantic_analyzer.Add_symbol_to_list({ {"#", "", -1, -1}, -1, -1 });
+    semantic_analyzer.addSymbol({ {"#", "", -1, -1}, -1, -1 });
 
     while (!end) {
         std::string output;
@@ -592,7 +594,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
             status.push_back(act.second);
             sign.push_back({-1, token_stream[p].token});
 
-            semantic_analyzer.Add_symbol_to_list({token_stream[p].token , token_stream[p].value , token_stream[p].row , token_stream[p].col ,-1, -1 });
+            semantic_analyzer.addSymbol({token_stream[p].token , token_stream[p].value , token_stream[p].row , token_stream[p].col ,-1, -1 });
             ++p;
         } else {
             int Pnum = act.second;
@@ -616,7 +618,7 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
             sign.push_back({SyntaxTree.size() - 1, P[Pnum].first});
             status.push_back(GOTO[status.back()][P[Pnum].first]);
 
-            semantic_analyzer.Analysis(P[Pnum].first, P[Pnum].second);
+            semantic_analyzer.analyze(P[Pnum].first, P[Pnum].second);
         }
     }
     if (!err) {
@@ -627,5 +629,5 @@ void LR1::parse(const std::vector<TOKEN>& _token_stream) {
         throw(std::string("fail to pass syntax analyze!"));
     }
 
-    semantic_analyzer.Print_quads("testfiles/Quads.txt");
+    semantic_analyzer.printQuads(dirname);
 }

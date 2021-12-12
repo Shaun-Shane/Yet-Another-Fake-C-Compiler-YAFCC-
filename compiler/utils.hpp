@@ -48,12 +48,12 @@ struct Quad {            // 四元式结构体
 
 struct SemanticSymbol {  //语义分析中的符号
     TOKEN info;
-    int tableOffset;  //符号所在 table 的 offset
-    int offset;   //符号在 table 内部的 index
+    int tableOffset;  // 符号所在 table 的 offset
+    int offset;   // 符号在 table 内部的 index
 };
 
 //标识符信息，即函数、变量、临时变量、常量的具体信息
-struct IdentifierInfo {
+struct Identifier {
     //几种标识符类型，分别为函数、变量、临时变量、常量、返回值
     enum IdentifierType { Function, Variable, TempVar, ConstVar, ReturnVar };
 
@@ -61,23 +61,23 @@ struct IdentifierInfo {
     std::string specifierType;      // 变(常)量类型/函数返回类型
     std::string identifierName;     // 标识符名称/常量值
     int functionParameterCount;     // 函数参数个数
-    int functionEntry;              // 函数入口地址(四元式的标号)
-    int functionTableIndex;  // 函数的函数符号表在整个程序的符号表列表中的索引
+    // int functionEntry;              // 函数入口地址(四元式的标号)
+    // int functionTableIndex;  // 函数的函数符号表在整个程序的符号表列表中的索引
 };
 
 //语义分析中的符号表
-struct Semantic_symbol_table {
-    //几种表的类型，分别为全局表、函数表、块级表、临时表
+struct SemanticSymbolTable {
+    // 全局表、函数表、块级表、临时表
     enum TableType { GlobalTable, FunctionTable, BlockTable, TempTable };
 
-    TableType tableType;                //表的类型
-    std::vector<IdentifierInfo> table;  //符号表
-    std::string tableName;              //表名
+    TableType tableType;                // 表的类型
+    std::vector<Identifier> table;  // 符号表
+    std::string tableName;              // 表名
 
-    Semantic_symbol_table() = default;
+    SemanticSymbolTable() = default;
 
     //构造函数
-    Semantic_symbol_table(const TableType& _tableType,
+    SemanticSymbolTable(const TableType& _tableType,
                           const std::string& _tableName) {
         tableType = _tableType;
         tableName = _tableName;
@@ -92,7 +92,7 @@ struct Semantic_symbol_table {
         return -1;
     }
     //加入一个变量，返回加入的位置
-    int addSymbol(const IdentifierInfo& id) {
+    int addSymbol(const Identifier& id) {
         if (findSymbol(id.identifierName) == -1) {
             table.push_back(id);
             return table.size() - 1;

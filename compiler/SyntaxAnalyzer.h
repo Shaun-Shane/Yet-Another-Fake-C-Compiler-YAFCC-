@@ -19,7 +19,7 @@
 
 class LR1 {
    private:
-    std::string codePath;
+    std::string dirname;
     std::string S;  // 文法起始符号 拓展文法起始符应为 S'
     std::vector<std::string> VT;  // 终结符
     std::vector<std::string> VN;  // 非终结符
@@ -59,7 +59,7 @@ class LR1 {
     void genLR1Table();  // 生成LR(1)分析表
 
    public:
-    LR1() = default;
+    LR1();
 
     LR1(const std::string& file);
 

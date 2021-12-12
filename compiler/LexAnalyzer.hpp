@@ -20,7 +20,7 @@ class LexAnalyzer {
     bool isend;          //结束标识
     std::string token;        //单词种类
     std::string value;        //当前单词
-    std::string codePath;
+    std::string dirname;
 
    public:
     /*
@@ -43,8 +43,8 @@ class LexAnalyzer {
         src.push_back('#'); // 插入终结符
         src.shrink_to_fit();
 
-        codePath = file; // 处理储源文件所在文件夹
-        while (!codePath.empty() && codePath.back() != '/') codePath.pop_back();
+        dirname = file; // 处理储源文件所在文件夹
+        while (!dirname.empty() && dirname.back() != '/') dirname.pop_back();
         procedure();
     }
 
@@ -183,7 +183,7 @@ class LexAnalyzer {
 
     void writeAnalyzeResult() {
         std::ofstream lexAnalyzeResult;
-        lexAnalyzeResult.open(codePath + "lexAnalyzeResult.txt");
+        lexAnalyzeResult.open(dirname + "lexAnalyzeResult.txt");
         lexAnalyzeResult << setiosflags(std::ios::left) << std::setw(20) << "Token";
         lexAnalyzeResult << setiosflags(std::ios::left) << std::setw(20) << "Value";
         lexAnalyzeResult << setiosflags(std::ios::left) << std::setw(20) << "Row";

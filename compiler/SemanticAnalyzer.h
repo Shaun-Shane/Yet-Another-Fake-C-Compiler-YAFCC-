@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <stack>
 #include <utility>
 
 #include "utils.hpp"
@@ -16,24 +17,24 @@ class SemanticAnalyzer {
    public:
     std::vector<Quad> quads;        // 四元式
     int mainIndex;                      // main函数对应的四元式标号
-    int backpatching_level;              // 回填层次
-    std::vector<int> backpatching_list;  // 回填列表
-    int next_quads_index;           // 下一个四元式标号
-    int tmp_var_count;                   // 临时变量计数
+    int backpatchLevel;              // 回填层次
+    std::vector<int> backpatchList;  // 回填列表
+    int nextQuadsId;           // 下一个四元式标号
+    int tmpVarCount;                   // 临时变量计数
     std::vector<SemanticSymbol> symbolList;    // 语义分析过程的符号流
-    std::vector<Semantic_symbol_table> tables;  // 程序所有符号表
-    std::vector<int> current_table_stack;  //当前作用域对应的符号表索引栈
+    std::vector<SemanticSymbolTable> tables;  // 程序所有符号表
+    std::vector<int> currentTableStack;  //当前作用域对应的符号表索引栈
 
-    //构造函数
+    // 构造函数
     SemanticAnalyzer();
-    //构造函数
+    // 构造函数
     SemanticAnalyzer(std::vector<std::string>* ptrVT, std::vector<std::string>* ptrVN);
-    //将所有的符号信息放入symbol_list
-    void Add_symbol_to_list(const SemanticSymbol symbol);
-    //分析过程
-    void Analysis(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
-    //打印四元式表
-    void Print_quads(const std::string file_path);
+    // 将符号信息放入 symbolist
+    void addSymbol(const SemanticSymbol& symbol);
+    // 语义分析
+    void analyze(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+    // 打印四元式表
+    void printQuads(const std::string& dirname);
 
    private:
     void analyzeProgram(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Program->ExtDefList 
