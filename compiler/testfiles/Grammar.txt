@@ -3,7 +3,7 @@ $ ID 为标识符 num 为数字
 ; , { } ( ) + - * / = < == > >= <= != int void if else while return ID num
 
 $ 变元
-S' Program ExtDefList ExtDef ExtDef VarSpecifier FunSpecifier FunDec CreateFunTable_m ParamDec VarList ParamDec DefList Def VarSpecifier StmtList Stmt AssignStmt AddSubExp Item Factor CallStmt CallFunCheck Args ReturnStmt Exp Relop IfStmt IfStmt_m1 IfStmt_m2 Block IfNext IfStmt_next WhileStmt WhileStmt_m1 WhileStmt_m2
+S' AddSubExp Args AssignStmt Block CallFunCheck CallStmt CreateFunTable_m Def DefList Exp ExtDef ExtDefList Factor FunDec FunSpecifier IfNext IfStmt IfStmt_m1 IfStmt_m2 IfStmt_next Item ParamDec Program Relop ReturnStmt Stmt StmtList VarList VarSpecifier WhileStmt WhileStmt_m1 WhileStmt_m2 
 
 $ 文法起始符号
 S'

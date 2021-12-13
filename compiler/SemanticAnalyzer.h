@@ -37,33 +37,33 @@ class SemanticAnalyzer {
     void printQuads(const std::string& dirname);
 
    private:
-    void popSymbol(int grCount); // 从 symbollist 删除若干符号
-    void analyzeProgram(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Program->ExtDefList 
-    void analyzeExtDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); //ExtDef->VarSpecifier ID ; | FunSpecifier FunDec Block ExitFunTable_m
-    void analyzeVarSpecifier(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // VarSpecifier->int
-    void analyzeFunSpecifier(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); //FunSpecifier->void | int
-    void analyzeFunDec(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // FunDec->ID CreateFunTable_m ( VarList )
-    void analyzeCreateFunTable_m(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // CreateFunTable_m->@
-    void analyzeParamDec(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // ParamDec->VarSpecifier ID
-    void analyzeBlock(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Block->{ DefList StmtList }
-    void analyzeDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Def->VarSpecifier ID ;
-    void analyzeAssignStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // AssignStmt->ID = Exp
-    void analyzeExp(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Exp->AddSubExp | Exp Relop AddSubExp
-    void analyzeAddSubExp(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // AddSubExp->Item | Item + Item | Item - Item
-    void analyzeItem(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Item->Factor Factor * Factor Factor / Factor
-    void analyzeFactor(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Factor->num | ( Exp ) ID CallStmt
-    void analyzeCallStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // CallStmt->ID ( CallFunCheck Args )
-    void analyzeCallFunCheck(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // CallFunCheck->@
-    void analyzeArgs(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Args->Exp , Args | Exp | @
-    void analyzeReturnStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // ReturnStmt->return Exp return
-    void analyzeRelop(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // Relop-> > | < | >= | <= | == | !=
-    void analyzeIfStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // IfStmt->if IfStmt_m1 ( Exp ) IfStmt_m2 Block IfNext
-    void analyzeIfStmt_m1(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // IfStmt_m1->@
-    void analyzeIfStmt_m2(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // IfStmt_m2->@
-    void analyzeIfNext(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // IfNext->@ | IfStmt_next else Block
-    void analyzeIfStmt_next(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // IfStmt_next->@
-    void analyzeWhileStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // WhileStmt->while WhileStmt_m1 ( Exp ) WhileStmt_m2 Block
-    void analyzeWhileStmt_m1(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // WhileStmt_m1->@
-    void analyzeWhileStmt_m2(const std::string& gl, const std::vector<std::pair<bool, int>>& gr); // WhileStmt_m2->@
+   void popSymbol(int grCount); // 从 symbollist 删除若干符号
+   void analyzeAddSubExp(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeArgs(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeAssignStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeBlock(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeCallFunCheck(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeCallStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeCreateFunTable_m(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeExp(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeExtDef(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeFactor(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeFunDec(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeFunSpecifier(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeIfNext(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeIfStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeIfStmt_m1(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeIfStmt_m2(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeIfStmt_next(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeItem(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeParamDec(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeProgram(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeRelop(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeReturnStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeVarSpecifier(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeWhileStmt(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeWhileStmt_m1(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
+   void analyzeWhileStmt_m2(const std::string& gl, const std::vector<std::pair<bool, int>>& gr);
 };
 #endif

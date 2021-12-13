@@ -1,4 +1,4 @@
-224
+216
 -1 int 
 -1 @ 
 -1 int 
@@ -74,154 +74,146 @@
 71 Block -1 else 61 IfStmt_next 
 72 IfNext 60 Block 41 IfStmt_m2 -1 ) 40 Exp -1 ( 25 IfStmt_m1 -1 if 
 73 IfStmt 
+-1 @ 
 -1 ID 
--1 num 
-76 Factor -1 * 75 Factor 
+76 Factor 
 77 Item 
 78 AddSubExp 
-79 Exp -1 = -1 ID 
--1 ; 80 AssignStmt 
--1 @ 
--1 ID 
-83 Factor 
-84 Item 
-85 AddSubExp 
 -1 <= 
 -1 num 
-88 Factor 
+81 Factor 
+82 Item 
+83 AddSubExp 80 Relop 79 Exp 
+-1 @ 
+-1 @ 
+-1 ID 
+-1 num 
+88 Factor -1 * 87 Factor 
 89 Item 
-90 AddSubExp 87 Relop 86 Exp 
+90 AddSubExp 
+91 Exp -1 = -1 ID 
+-1 ; 92 AssignStmt 
 -1 @ 
--1 @ 
+94 StmtList 93 Stmt 
+-1 } 95 StmtList 86 DefList -1 { 
+96 Block 85 WhileStmt_m2 -1 ) 84 Exp -1 ( 75 WhileStmt_m1 -1 while 
+97 WhileStmt 
 -1 ID 
--1 num 
-95 Factor -1 * 94 Factor 
-96 Item 
-97 AddSubExp 
-98 Exp -1 = -1 ID 
--1 ; 99 AssignStmt 
+99 Factor 
+100 Item 
+101 AddSubExp 
+102 Exp -1 return 
+-1 ; 103 ReturnStmt 
 -1 @ 
-101 StmtList 100 Stmt 
--1 } 102 StmtList 93 DefList -1 { 
-103 Block 92 WhileStmt_m2 -1 ) 91 Exp -1 ( 82 WhileStmt_m1 -1 while 
-104 WhileStmt 
--1 ID 
-106 Factor 
-107 Item 
-108 AddSubExp 
-109 Exp -1 return 
--1 ; 110 ReturnStmt 
--1 @ 
-112 StmtList 111 Stmt 
-113 StmtList 105 Stmt 
-114 StmtList 81 Stmt 
-115 StmtList 74 Stmt 
-116 StmtList 24 Stmt 
--1 } 117 StmtList 18 DefList -1 { 
-118 Block 11 FunDec 0 FunSpecifier 
+105 StmtList 104 Stmt 
+106 StmtList 98 Stmt 
+107 StmtList 74 Stmt 
+108 StmtList 24 Stmt 
+-1 } 109 StmtList 18 DefList -1 { 
+110 Block 11 FunDec 0 FunSpecifier 
 -1 int 
 -1 @ 
 -1 int 
--1 ID 122 VarSpecifier 
-123 ParamDec 
--1 ) 124 VarList -1 ( 121 CreateFunTable_m -1 ID 
+-1 ID 114 VarSpecifier 
+115 ParamDec 
+-1 ) 116 VarList -1 ( 113 CreateFunTable_m -1 ID 
 -1 @ 
 -1 ID 
-127 Factor 
+119 Factor 
 -1 num 
-129 Factor 
-130 Item -1 + 128 Item 
-131 AddSubExp 
-132 Exp -1 = -1 ID 
--1 ; 133 AssignStmt 
+121 Factor 
+122 Item -1 + 120 Item 
+123 AddSubExp 
+124 Exp -1 = -1 ID 
+-1 ; 125 AssignStmt 
 -1 ID 
 -1 num 
-136 Factor -1 * 135 Factor 
-137 Item 
-138 AddSubExp 
-139 Exp -1 return 
--1 ; 140 ReturnStmt 
+128 Factor -1 * 127 Factor 
+129 Item 
+130 AddSubExp 
+131 Exp -1 return 
+-1 ; 132 ReturnStmt 
 -1 @ 
-142 StmtList 141 Stmt 
-143 StmtList 134 Stmt 
--1 } 144 StmtList 126 DefList -1 { 
-145 Block 125 FunDec 120 FunSpecifier 
+134 StmtList 133 Stmt 
+135 StmtList 126 Stmt 
+-1 } 136 StmtList 118 DefList -1 { 
+137 Block 117 FunDec 112 FunSpecifier 
 -1 void 
 -1 @ 
+-1 void 
+-1 ) 141 VarList -1 ( 140 CreateFunTable_m -1 ID 
+-1 int 
+-1 ; -1 ID 143 VarSpecifier 
+-1 int 
+-1 ; -1 ID 145 VarSpecifier 
+-1 int 
+-1 ; -1 ID 147 VarSpecifier 
 -1 @ 
--1 ) 149 VarList -1 ( 148 CreateFunTable_m -1 ID 
--1 int 
--1 ; -1 ID 151 VarSpecifier 
--1 int 
--1 ; -1 ID 153 VarSpecifier 
--1 int 
--1 ; -1 ID 155 VarSpecifier 
--1 @ 
-157 DefList 156 Def 
-158 DefList 154 Def 
-159 DefList 152 Def 
+149 DefList 148 Def 
+150 DefList 146 Def 
+151 DefList 144 Def 
 -1 num 
-161 Factor 
-162 Item 
-163 AddSubExp 
-164 Exp -1 = -1 ID 
--1 ; 165 AssignStmt 
+153 Factor 
+154 Item 
+155 AddSubExp 
+156 Exp -1 = -1 ID 
+-1 ; 157 AssignStmt 
 -1 num 
-167 Factor 
-168 Item 
-169 AddSubExp 
-170 Exp -1 = -1 ID 
--1 ; 171 AssignStmt 
+159 Factor 
+160 Item 
+161 AddSubExp 
+162 Exp -1 = -1 ID 
+-1 ; 163 AssignStmt 
 -1 num 
-173 Factor 
-174 Item 
-175 AddSubExp 
-176 Exp -1 = -1 ID 
--1 ; 177 AssignStmt 
+165 Factor 
+166 Item 
+167 AddSubExp 
+168 Exp -1 = -1 ID 
+-1 ; 169 AssignStmt 
 -1 @ 
 -1 ID 
-180 Factor 
-181 Item 
-182 AddSubExp 
+172 Factor 
+173 Item 
+174 AddSubExp 
 -1 ID 
-184 Factor 
-185 Item 
-186 AddSubExp 
+176 Factor 
+177 Item 
+178 AddSubExp 
 -1 @ 
 -1 ID 
-189 Factor 
-190 Item 
-191 AddSubExp 
-192 Exp 
--1 ) 193 Args 188 CallFunCheck -1 ( -1 ID 
+181 Factor 
+182 Item 
+183 AddSubExp 
+184 Exp 
+-1 ) 185 Args 180 CallFunCheck -1 ( -1 ID 
+186 CallStmt 
+187 Factor 
+188 Item 
+189 AddSubExp 
+190 Exp 
+191 Args -1 , 179 Exp 
+192 Args -1 , 175 Exp 
+-1 ) 193 Args 171 CallFunCheck -1 ( -1 ID 
 194 CallStmt 
 195 Factor 
 196 Item 
 197 AddSubExp 
-198 Exp 
-199 Args -1 , 187 Exp 
-200 Args -1 , 183 Exp 
--1 ) 201 Args 179 CallFunCheck -1 ( -1 ID 
-202 CallStmt 
-203 Factor 
-204 Item 
-205 AddSubExp 
-206 Exp -1 = -1 ID 
--1 ; 207 AssignStmt 
+198 Exp -1 = -1 ID 
+-1 ; 199 AssignStmt 
 -1 return 
--1 ; 209 ReturnStmt 
+-1 ; 201 ReturnStmt 
 -1 @ 
-211 StmtList 210 Stmt 
-212 StmtList 208 Stmt 
-213 StmtList 178 Stmt 
-214 StmtList 172 Stmt 
-215 StmtList 166 Stmt 
--1 } 216 StmtList 160 DefList -1 { 
-217 Block 150 FunDec 147 FunSpecifier 
+203 StmtList 202 Stmt 
+204 StmtList 200 Stmt 
+205 StmtList 170 Stmt 
+206 StmtList 164 Stmt 
+207 StmtList 158 Stmt 
+-1 } 208 StmtList 152 DefList -1 { 
+209 Block 142 FunDec 139 FunSpecifier 
 -1 @ 
-219 ExtDefList 218 ExtDef 
-220 ExtDefList 146 ExtDef 
-221 ExtDefList 119 ExtDef 
-222 ExtDefList 
-223 Program 
+211 ExtDefList 210 ExtDef 
+212 ExtDefList 138 ExtDef 
+213 ExtDefList 111 ExtDef 
+214 ExtDefList 
+215 Program 
 S'
