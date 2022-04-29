@@ -52,24 +52,22 @@ void SemanticAnalyzer::analyze(const std::string& gl,
     else if (gl == "Factor") analyzeFactor(gl, gr);
     else if (gl == "FunDec") analyzeFunDec(gl, gr);
     else if (gl == "FunSpecifier") analyzeFunSpecifier(gl, gr);
-    else if (gl == "IfNext") analyzeIfNext(gl, gr);
+    else if (gl == "IfNext" && gr.size() > 1) analyzeIfNext(gl, gr);
     else if (gl == "IfStmt") analyzeIfStmt(gl, gr);
     else if (gl == "IfStmt_m1") analyzeIfStmt_m1(gl, gr);
     else if (gl == "IfStmt_m2") analyzeIfStmt_m2(gl, gr);
     else if (gl == "IfStmt_next") analyzeIfStmt_next(gl, gr);
     else if (gl == "Item") analyzeItem(gl, gr);
     else if (gl == "ParamDec") analyzeParamDec(gl, gr);
-    else if (gl == "ParamDec") analyzeParamDec(gl, gr);
     else if (gl == "Program") analyzeProgram(gl, gr);
     else if (gl == "Relop") analyzeRelop(gl, gr);
     else if (gl == "ReturnStmt") analyzeReturnStmt(gl, gr);
-    else if (gl == "VarSpecifier") analyzeVarSpecifier(gl, gr);
     else if (gl == "VarSpecifier") analyzeVarSpecifier(gl, gr);
     else if (gl == "WhileStmt") analyzeWhileStmt(gl, gr);
     else if (gl == "WhileStmt_m1") analyzeWhileStmt_m1(gl, gr);
     else if (gl == "WhileStmt_m2") analyzeWhileStmt_m2(gl, gr);
     else {
-        if (!gr[0].first && (*ptrVT)[gr[0].second] != "@")
+        if (gr[0].first || (!gr[0].first && (*ptrVT)[gr[0].second] != "@"))
             popSymbol(gr.size());
         symbolList.push_back({gl, "", -1, -1, -1, -1});
     }
@@ -122,14 +120,14 @@ void SemanticAnalyzer::analyzeArgs(
         SemanticSymbol exp =
             symbolList[static_cast<int>(symbolList.size()) - 3]; // Exp
         quads.push_back(
-            {nextQuadsId++, "param", exp.info.value, "-", "-"});
+            {nextQuadsId++, "arg", exp.info.value, "-", "-"});
         int aru_num = stoi(symbolList.back().info.value) + 1;
         popSymbol(gr.size());
         symbolList.push_back({gl, std::to_string(aru_num), -1, -1, -1, -1});
     } else if (gr[0].first && (*ptrVN)[gr[0].second] == "Exp") { // Args->Exp
         SemanticSymbol exp = symbolList.back();
         quads.push_back(
-            {nextQuadsId++, "param", exp.info.value, "-", "-"});
+            {nextQuadsId++, "arg", exp.info.value, "-", "-"});
         popSymbol(gr.size());
         symbolList.push_back({gl, "1", -1, -1, -1, -1});
     } else if (!gr[0].first && (*ptrVT)[gr[0].second] == "@") { // Args->@
@@ -547,7 +545,7 @@ void SemanticAnalyzer::analyzeParamDec(
     // 参数重复定义
     if (funcTable.findSym(identifier.info.value) != -1) {
         std::string err =
-            "Semantic analyze failed! Multiple param definition on row " +
+            "Semantic analyze failed! Multiple arg definition on row " +
             std::to_string(identifier.info.row) + " col " +
             std::to_string(identifier.info.col) + " " + identifier.info.value;
         throw(err);
@@ -558,7 +556,7 @@ void SemanticAnalyzer::analyzeParamDec(
     // 获取当前函数在全局符号表的 index 形参个数 + 1
     tables.front().table[tables.front().findSym(funcTable.tableName)].functionParameterCount++;
 
-    quads.push_back({nextQuadsId ++, "defpar", "-" , "-", identifier.info.value });
+    quads.push_back({nextQuadsId ++, "param", "-" , "-", identifier.info.value });
 
     popSymbol(gr.size());
     symbolList.push_back({gl, identifier.info.value, identifier.info.row,identifier.info.col, currentTableStack.back(), new_position});
